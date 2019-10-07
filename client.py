@@ -54,7 +54,6 @@ class Client:
                     xmlundeployedBlue = xmlstate.find('undeployedBluePieces')
                     for xmlpiece in xmlundeployedBlue.findall('piece'):
                         self.undeployed['BLUE'].append(xmlpiece.get('type'))
-                    print(self.undeployed)
                 elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
                     print('Send move for', self.color)
             elif xml.tag == 'left':
