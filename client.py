@@ -4,6 +4,7 @@ from xml.etree import ElementTree
 
 class Client:
     def __init__(self, host, port):
+        self.room = None
         self.color = None
         self.turn = None
         self.board = None
@@ -26,7 +27,9 @@ class Client:
             except ElementTree.ParseError:
                 continue
 
-            if xml.tag == 'room':
+            if xml.tag == 'joined':
+                self.room = xml.get('roomId')
+            elif xml.tag == 'room':
                 xmldata = xml.find('data')
                 if xmldata.get('class') == 'memento':
                     xmlstate = xmldata.find('state')
@@ -55,7 +58,13 @@ class Client:
                     for xmlpiece in xmlundeployedBlue.findall('piece'):
                         self.undeployed['BLUE'].append(xmlpiece.get('type'))
                 elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
-                    print('Send move for', self.color)
+                    ret = b'<room roomId="' + self.room.encode() + b'">'
+                    ret += b'<data class="setmove">'
+                    ret += b'<piece owner="' + self.color.encode() + b'" type="ANT"/>'
+                    ret += b'<destination x="0" y="0" z="0"/>'
+                    ret += b'</data>'
+                    ret += b'</room>'
+                    self.socket.send(ret)
             elif xml.tag == 'left':
                 return False
 
