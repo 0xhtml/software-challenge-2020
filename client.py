@@ -7,6 +7,7 @@ class Client:
         self.color = None
         self.turn = None
         self.board = None
+        self.undeployed = None
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
@@ -43,7 +44,17 @@ class Client:
                                 self.board[(x, y, z)] = 'OBSTRUCTED'
                             else:
                                 self.board[(x, y, z)] = 'EMPTY'
-                    print(self.board)
+
+                    self.undeployed = {'RED': [], 'BLUE': []}
+
+                    xmlundeployedRed = xmlstate.find('undeployedRedPieces')
+                    for xmlpiece in xmlundeployedRed.findall('piece'):
+                        self.undeployed['RED'].append(xmlpiece.get('type'))
+
+                    xmlundeployedBlue = xmlstate.find('undeployedBluePieces')
+                    for xmlpiece in xmlundeployedBlue.findall('piece'):
+                        self.undeployed['BLUE'].append(xmlpiece.get('type'))
+                    print(self.undeployed)
                 elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
                     print('Send move for', self.color)
             elif xml.tag == 'left':
