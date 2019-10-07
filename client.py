@@ -31,7 +31,19 @@ class Client:
                     xmlstate = xmldata.find('state')
                     self.color = xmlstate.get('currentPlayerColor')
                     self.turn = xmlstate.get('turn')
-                    self.board = xmlstate.find('board')
+
+                    xmlboard = xmlstate.find('board')
+                    self.board = {}
+                    for xmlfields in xmlboard.findall('fields'):
+                        for xmlfield in xmlfields.findall('field'):
+                            x = xmlfield.get('x')
+                            y = xmlfield.get('y')
+                            z = xmlfield.get('z')
+                            if xmlfield.get('isObstructed') == 'true':
+                                self.board[(x, y, z)] = 'OBSTRUCTED'
+                            else:
+                                self.board[(x, y, z)] = 'EMPTY'
+                    print(self.board)
                 elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
                     print('Send move for', self.color)
             elif xml.tag == 'left':
