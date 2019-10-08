@@ -1,21 +1,51 @@
+import gamestate
+import piece
 import socket
 from xml.etree import ElementTree
 
 
 class Client:
-    def __init__(self, host, port):
+    def __init__(self, host: str, port: int):
         self.room = None
-        self.color = None
-        self.turn = None
-        self.board = None
-        self.undeployed = None
+        self.state = None
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
-        self.socket.send(b'<protocol>')
+        self.send('<protocol>')
 
-    def send(self, data):
-        self.socket.send(data)
+    def send(self, data: str):
+        self.socket.send(data.encode())
+        print('send:', data.encode())
+
+    def send_setmove(self, piece: piece.Piece, x: int, y: int, z: int):
+        data = f"""
+        <room roomId="{self.room}">
+            <data class="setmove">
+                <piece owner="{piece.color}" type="{piece.type}"/>
+                <destination x="{x}" y="{y}" z="{z}"/>
+            </data>
+        </room>
+        """
+        self.send(data)
+
+    def send_dragmove(self, sx: int, sy: int, sz: int, dx: int, dy: int, dz: int):
+        data = f"""
+        <room roomId="{self.room}">
+            <data class="dragmove">
+                <start x="{sx}" y="{sy}" z="{sz}"/>
+                <destination x="{dx}" y="{dy}" z="{dz}"/>
+            </data>
+        </room>
+        """
+        self.send(data)
+
+    def send_missmove(self):
+        data = f"""
+        <room roomId="{self.room}">
+            <data class="missmove"/>
+        </room>
+        """
+        self.send(data)
 
     def recv(self):
         data = b''
@@ -27,59 +57,42 @@ class Client:
             except ElementTree.ParseError:
                 continue
 
+            print('recv:', data[:100])
+
             if xml.tag == 'joined':
-                self.room = xml.get('roomId')
+                return self.parse_joined(xml)
             elif xml.tag == 'room':
-                xmldata = xml.find('data')
-                if xmldata.get('class') == 'memento':
-                    self.parse_state(xmldata.find('state'))
-                elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
-                    self.send_move()
+                return self.parse_room(xml)
             elif xml.tag == 'left':
-                return False
+                return self.parse_left(xml)
+            else:
+                print('unknown')
+                return True
 
-            return True
+    def parse_joined(self, xml: ElementTree.Element):
+        self.room = xml.get('roomId')
+        return True
 
-    def parse_state(self, xml):
-        self.color = xml.get('currentPlayerColor')
-        self.turn = xml.get('turn')
+    def parse_room(self, xml: ElementTree.Element):
+        xmldata = xml.find('data')
+        if xmldata.get('class') == 'memento':
+            self.state = gamestate.parse(xmldata.find('state'))
+        elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
+            t = int(self.state.turn / 2)
+            if not t:
+                t = 0
+            pos = (-t, 0, t)
+            self.send_setmove(self.state.get_undeployed(self.state.color)[0], *pos)
+        return True
 
-        xmlboard = xml.find('board')
-        self.board = {}
-        for xmlfields in xmlboard.findall('fields'):
-            for xmlfield in xmlfields.findall('field'):
-                x = xmlfield.get('x')
-                y = xmlfield.get('y')
-                z = xmlfield.get('z')
-                if xmlfield.get('isObstructed') == 'true':
-                    self.board[(x, y, z)] = 'OBSTRUCTED'
-                else:
-                    self.board[(x, y, z)] = 'EMPTY'
-
-        self.undeployed = {'RED': [], 'BLUE': []}
-
-        xmlundeployedRed = xml.find('undeployedRedPieces')
-        for xmlpiece in xmlundeployedRed.findall('piece'):
-            self.undeployed['RED'].append(xmlpiece.get('type'))
-
-        xmlundeployedBlue = xml.find('undeployedBluePieces')
-        for xmlpiece in xmlundeployedBlue.findall('piece'):
-            self.undeployed['BLUE'].append(xmlpiece.get('type'))
-
-    def send_move(self):
-        ret = b'<room roomId="' + self.room.encode() + b'">'
-        ret += b'<data class="setmove">'
-        ret += b'<piece owner="' + self.color.encode() + b'" type="ANT"/>'
-        ret += b'<destination x="0" y="0" z="0"/>'
-        ret += b'</data>'
-        ret += b'</room>'
-        self.socket.send(ret)
+    def parse_left(self, xml: ElementTree.Element):
+        return False
 
     def join_any_game(self):
-        self.send(b'<join gameType="swc_2020_hive"/>')
-        self.socket.recv(len("<protocol>"))
+        self.send('<join gameType="swc_2020_hive"/>')
+        self.socket.recv(len(b'<protocol>\n  '))
         while self.recv():
             pass
 
-    def join_reservation(self, reservation):
+    def join_reservation(self, reservation: str):
         pass
