@@ -65,6 +65,8 @@ class Client:
                 return self.parse_room(xml)
             elif xml.tag == 'left':
                 return self.parse_left(xml)
+            elif xml.tag == 'sc.protocol.responses.CloseConnection':
+                return self.parse_close_connection(xml)
             else:
                 print('unknown')
                 return True
@@ -87,12 +89,16 @@ class Client:
 
     def parse_left(self, xml: ElementTree.Element):
         return False
+    
+    def parse_close_connection(self, xml: ElementTree.Element):
+        return False
 
     def join_any_game(self):
         self.send('<join gameType="swc_2020_hive"/>')
         self.socket.recv(len(b'<protocol>\n  '))
         while self.recv():
             pass
+        self.socket.close()
 
     def join_reservation(self, reservation: str):
         pass
