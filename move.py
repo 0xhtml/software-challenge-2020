@@ -39,5 +39,8 @@ class DragMove(Move):
 
 
 class MissMove(Move):
+    def __init__(self):
+        pass
+
     def to_xml(self):
         return "<data class=\"missmove\"/>"
