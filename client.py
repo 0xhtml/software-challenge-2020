@@ -1,5 +1,6 @@
+import bot
 import gamestate
-import piece
+import move
 import socket
 from xml.etree import ElementTree
 
@@ -7,7 +8,9 @@ from xml.etree import ElementTree
 class Client:
     def __init__(self, host: str, port: int):
         self.room = None
-        self.state = None
+        self.gamestate = None
+
+        self.bot = bot.Bot()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
@@ -17,34 +20,8 @@ class Client:
         self.socket.send(data.encode())
         print('send:', data.encode()[:100])
 
-    def send_setmove(self, piece: piece.Piece, x: int, y: int, z: int):
-        data = f"""
-        <room roomId="{self.room}">
-            <data class="setmove">
-                <piece owner="{piece.color}" type="{piece.type}"/>
-                <destination x="{x}" y="{y}" z="{z}"/>
-            </data>
-        </room>
-        """
-        self.send(data)
-
-    def send_dragmove(self, sx: int, sy: int, sz: int, dx: int, dy: int, dz: int):
-        data = f"""
-        <room roomId="{self.room}">
-            <data class="dragmove">
-                <start x="{sx}" y="{sy}" z="{sz}"/>
-                <destination x="{dx}" y="{dy}" z="{dz}"/>
-            </data>
-        </room>
-        """
-        self.send(data)
-
-    def send_missmove(self):
-        data = f"""
-        <room roomId="{self.room}">
-            <data class="missmove"/>
-        </room>
-        """
+    def send_move(self, move: move.Move):
+        data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
         self.send(data)
 
     def recv(self):
@@ -78,13 +55,9 @@ class Client:
     def parse_room(self, xml: ElementTree.Element):
         xmldata = xml.find('data')
         if xmldata.get('class') == 'memento':
-            self.state = gamestate.parse(xmldata.find('state'))
+            self.gamestate = gamestate.parse(xmldata.find('state'))
         elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
-            t = int(self.state.turn / 2)
-            if not t:
-                t = 0
-            pos = (-t, 0, t)
-            self.send_setmove(self.state.get_undeployed(self.state.color)[0], *pos)
+            self.send_move(self.bot.get(self.gamestate))
         return True
 
     def parse_left(self, xml: ElementTree.Element):
