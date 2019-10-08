@@ -13,6 +13,9 @@ class Field:
         self.position = position
         self.state = state
 
+    def get_neighbours(self, fields):
+        return fields[:2]
+
 
 def parse(xml: ElementTree.Element):
     x = int(xml.get("x"))
