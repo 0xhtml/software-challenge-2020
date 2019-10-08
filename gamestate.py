@@ -1,4 +1,5 @@
 import piece
+import field
 from xml.etree import ElementTree
 
 
@@ -23,19 +24,12 @@ def parse(xml: ElementTree.Element):
     state.turn = int(xml.get('turn'))
 
     xmlboard = xml.find('board')
-    state.board = {}
+    state.board = []
     for xmlfields in xmlboard.findall('fields'):
         for xmlfield in xmlfields.findall('field'):
-            x = int(xmlfield.get('x'))
-            y = int(xmlfield.get('y'))
-            z = int(xmlfield.get('z'))
-            if xmlfield.get('isObstructed') == 'true':
-                state.board[(x, y, z)] = 'OBSTRUCTED'
-            else:
-                state.board[(x, y, z)] = 'EMPTY'
+            state.board.append(field.parse(xmlfield))
 
     state.undeployed = []
-
     for xmlpiece in xml.findall('*/piece'):
         state.undeployed.append(piece.parse(xmlpiece))
 

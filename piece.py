@@ -1,5 +1,6 @@
 from xml.etree import ElementTree
 
+
 class Piece:
     def __init__(self, color: str, type: str):
         self.color = color

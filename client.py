@@ -15,7 +15,7 @@ class Client:
 
     def send(self, data: str):
         self.socket.send(data.encode())
-        print('send:', data.encode())
+        print('send:', data.encode()[:100])
 
     def send_setmove(self, piece: piece.Piece, x: int, y: int, z: int):
         data = f"""
