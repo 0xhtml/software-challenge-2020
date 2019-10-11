@@ -1,39 +1,35 @@
-import piece
-import field
-
-
 class Move:
     def __init__(self):
-        raise Exception("Unimplemented")
+        raise NotImplementedError
 
     def to_xml(self):
-        raise Exception("Unimplemented")
+        raise NotImplementedError
 
 
 class SetMove(Move):
-    def __init__(self, piece: piece.Piece, pos: field.Position):
+    def __init__(self, piece: tuple, pos: tuple):
         self.piece = piece
         self.pos = pos
 
     def to_xml(self):
         return f"""
         <data class="setmove">
-            <piece owner="{self.piece.color}" type="{self.piece.type}"/>
-            <destination x="{self.pos.x}" y="{self.pos.y}" z="{self.pos.z}"/>
+            <piece owner="{self.piece[0]}" type="{self.piece[1]}"/>
+            <destination x="{self.pos[0]}" y="{self.pos[1]}" z="{self.pos[2]}"/>
         </data>
         """
 
 
 class DragMove(Move):
-    def __init__(self, start: field.Position, dest: field.Position):
+    def __init__(self, start: tuple, dest: tuple):
         self.start = start
         self.dest = dest
 
     def to_xml(self):
         return f"""
         <data class="dragmove">
-            <start x="{self.start.x}" y="{self.start.y}" z="{self.start.z}"/>
-            <destination x="{self.dest.x}" y="{self.dest.y}" z="{self.dest.z}"/>
+            <start x="{self.start[0]}" y="{self.start[1]}" z="{self.start[2]}"/>
+            <destination x="{self.dest[0]}" y="{self.dest[1]}" z="{self.dest[2]}"/>
         </data>
         """
 

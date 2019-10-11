@@ -1,59 +1,57 @@
-import piece
-import field
+import board
 import move
 from xml.etree import ElementTree
 
 
 class GameState:
-    def __init__(self):
-        self.color = None
-        self.turn = None
-        self.board = None
-        self.undeployed = None
-
-    def get_undeployed(self, color: str):
-        undeployed = []
-        for piece in self.undeployed:
-            if piece.color == color:
-                undeployed.append(piece)
-        return undeployed
-
-    def get_deployed(self, color: str):
-        deployed = []
-        for field in self.board:
-            if isinstance(field.state, piece.Piece) and field.state.color == color:
-                deployed.append(field)
-        return deployed
-
-    def get_empty_fields(self):
-        return filter(lambda x: x.state == "EMPTY", self.board)
+    def __init__(self, color: str, turn: int, board: board.Board, undeployed: set):
+        self.color = color
+        self.turn = turn
+        self.board = board
+        self.undeployed = undeployed
+        if color == "RED":
+            self.own = self.board.red
+            self.opp = self.board.blue
+        else:
+            self.own = self.board.blue
+            self.opp = self.board.red
 
     def get_possible_set_moves(self):
-        undeployed = self.get_undeployed(self.color)
-        empty = self.get_empty_fields()
         if self.turn == 0:
-            return [move.SetMove(x, y) for x in undeployed for y in empty]
+            dests = self.board.empty
         elif self.turn == 1:
-            field = self.get_deployed("BLUE" if self.color == "RED" else "RED")[0]
-            neighbours = field.get_neighbours(empty)
-            return [move.SetMove(x, y) for x in undeployed for y in neighbours]
+            field = self.opp.__iter__().__next__()
+            dests = self.board.get_neighbours(field)
+            dests.intersection(self.board.empty)
         else:
-            return []
+            dests = {y for x in self.own for y in self.board.get_neighbours(x)}
+            dests = dests.intersection(self.board.empty)
+            def f(x):
+                neighbours = self.board.get_neighbours(x)
+                for neighbour in neighbours:
+                    for oppfield in self.opp:
+                        if neighbour == oppfield[:-1]:
+                            return False
+                return True
+            dests = filter(f, dests)
+
+        if (self.turn > 5 and False):  # TODO: False == Not placed bee
+            types = {"BEE"}
+        else:
+            undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
+            types = {x[1] for x in undeployed}
+
+        return {move.SetMove((self.color, x), y) for x in types for y in dests}
 
 
 def parse(xml: ElementTree.Element):
-    state = GameState()
-    state.color = xml.get("currentPlayerColor")
-    state.turn = int(xml.get("turn"))
+    color = xml.get("currentPlayerColor")
+    turn = int(xml.get("turn"))
 
-    xmlboard = xml.find("board")
-    state.board = []
-    for xmlfields in xmlboard.findall("fields"):
-        for xmlfield in xmlfields.findall("field"):
-            state.board.append(field.parse(xmlfield))
+    _board = board.parse(xml.find("board"))
 
-    state.undeployed = []
+    undeployed = []
     for xmlpiece in xml.findall("*/piece"):
-        state.undeployed.append(piece.parse(xmlpiece))
+        undeployed.append((xmlpiece.get('owner'), xmlpiece.get('type')))
 
-    return state
+    return GameState(color, turn, _board, undeployed)

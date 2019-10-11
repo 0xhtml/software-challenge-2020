@@ -11,7 +11,7 @@ if __name__ == "__main__":
         import pyautogui
         pyautogui.hotkey('alt', 'tab')
         pyautogui.sleep(2)
-        for _ in range(3):
+        for _ in range(2):
             pyautogui.press('tab')
         pyautogui.press('down')
         for _ in range(3):
