@@ -39,7 +39,6 @@ class Client:
             if xml.tag == 'joined':
                 return self.parse_joined(xml)
             elif xml.tag == 'room':
-                print(data)
                 return self.parse_room(xml)
             elif xml.tag == 'left':
                 return self.parse_left(xml)
