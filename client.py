@@ -18,7 +18,6 @@ class Client:
 
     def send(self, data: str):
         self.socket.send(data.encode())
-        print('send:', data.encode()[:100])
 
     def send_move(self, move: move.Move):
         data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
@@ -33,8 +32,6 @@ class Client:
                 xml = ElementTree.fromstring(data)
             except ElementTree.ParseError:
                 continue
-
-            print('recv:', data[:100])
 
             if xml.tag == 'joined':
                 return self.parse_joined(xml)
@@ -58,6 +55,8 @@ class Client:
             self.gamestate = gamestate.parse(xmldata.find('state'))
         elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
             self.send_move(self.bot.get(self.gamestate))
+        elif xmldata.get('class') == "error":
+            print(xmldata.get("message"))
         return True
 
     def parse_left(self, xml: ElementTree.Element):
