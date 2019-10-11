@@ -35,7 +35,7 @@ class GameState:
                 return True
             dests = filter(f, dests)
 
-        if (self.turn > 5 and False):  # TODO: False == Not placed bee
+        if (self.turn > 5 and (self.color, "BEE") not in self.undeployed):
             types = {"BEE"}
         else:
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
