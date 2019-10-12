@@ -19,6 +19,9 @@ class SetMove(Move):
         </data>
         """
 
+    def __str__(self):
+        return f"SetMove({self.piece}, {self.pos})"
+
 
 class DragMove(Move):
     def __init__(self, start: tuple, dest: tuple):
@@ -33,6 +36,9 @@ class DragMove(Move):
         </data>
         """
 
+    def __str__(self):
+        return f"DragMove({self.start}, {self.dest})"
+
 
 class MissMove(Move):
     def __init__(self):
@@ -40,3 +46,6 @@ class MissMove(Move):
 
     def to_xml(self):
         return "<data class=\"missmove\"/>"
+
+    def __str__(self):
+        return f"MissMove()"

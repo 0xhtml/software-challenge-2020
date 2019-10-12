@@ -20,6 +20,7 @@ class Client:
         self.socket.send(data.encode())
 
     def send_move(self, move: move.Move):
+        print(move)
         data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
         self.send(data)
 
