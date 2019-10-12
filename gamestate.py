@@ -17,6 +17,16 @@ class GameState:
     def ownfields(self):
         return self.board.__getattribute__(self.color.lower())
 
+    def get_possible_move_dests(self, own_only=False):
+        dests = self.ownfields()
+        if not own_only:
+            dests = dests.union(self.oppfields())
+
+        dests = {y for x in dests for y in self.board.get_neighbours(x)}
+        dests = dests.intersection(self.board.empty)
+
+        return dests
+
     def get_possible_set_moves(self):
         if self.turn == 0:
             dests = self.board.empty
@@ -53,40 +63,25 @@ class GameState:
         moves = set()
 
         for field in self.ownfields():
-            dests = self.board.get_neighbours(field)
+            possible_dests = self.get_possible_move_dests()
 
-            if field[3] != "BEETLE" and field[3] != "GRASSHOPPER":
-                dests = dests.intersection(self.board.empty)
-
-            if field[3] == "SPIDER":
+            if field[3] == "BEE":
+                dests = self.board.get_neighbours(field)
+                dests = dests.intersection(possible_dests)
+            elif field[3] == "BEETLE":
+                dests = set()
+            elif field[3] == "SPIDER":
                 for _ in range(2):
-                    next_dests = {
+                    ndests = {
                         y for x in dests for y in self.board.get_neighbours(x)}
-                    next_dests = next_dests.intersection(self.board.empty)
-                    dests = next_dests.difference(dests)
+                    ndests = ndests.intersection(possible_dests)
+                    ndests = ndests.difference(dests)
+                    # TODO: Filter out too tight fits
+                    dests = ndests
             elif field[3] == "ANT":
-                pre_dests = set()
-                while len(dests) != len(pre_dests):
-                    pre_dests = dests.copy()
-                    next_dests = {
-                        y for x in dests for y in self.board.get_neighbours(x)}
-                    next_dests = next_dests.intersection(self.board.empty)
-                    dests.update(next_dests)
+                dests = set()
             elif field[3] == "GRASSHOPPER":
-                sdests = dests.intersection(self.board.red.union(self.board.blue))
-                dests.clear()
-
-                for dest in sdests:
-                    x = dest[0] - field[0]
-                    y = dest[1] - field[1]
-                    z = dest[2] - field[2]
-                    while dest not in self.board.empty:
-                        dest = (dest[0] + x, dest[1] + y, dest[2] + z)
-                        if dest in self.board.obstructed:
-                            break
-                    else:
-                        continue
-                    dests.add(dest)
+                dests = set()
 
             moves.update(move.DragMove(field, x) for x in dests)
 
