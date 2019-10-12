@@ -17,14 +17,9 @@ class GameState:
     def ownfields(self):
         return self.board.__getattribute__(self.color.lower())
 
-    def get_possible_move_dests(self, own_only=False):
-        dests = self.ownfields()
-        if not own_only:
-            dests = dests.union(self.oppfields())
-
+    def get_possible_move_dests(self, dests):
         dests = {y for x in dests for y in self.board.get_neighbours(x)}
         dests = dests.intersection(self.board.empty)
-
         return dests
 
     def get_possible_set_moves(self):
@@ -63,7 +58,9 @@ class GameState:
         moves = set()
 
         for field in self.ownfields():
-            possible_dests = self.get_possible_move_dests()
+            possible_dests = self.board.red.union(self.board.blue)
+            possible_dests.discard(field)
+            possible_dests = self.get_possible_move_dests(possible_dests)
 
             if field[3] == "BEE":
                 dests = self.board.get_neighbours(field)
@@ -71,13 +68,14 @@ class GameState:
             elif field[3] == "BEETLE":
                 dests = set()
             elif field[3] == "SPIDER":
+                all_dests = dests.copy()
                 for _ in range(2):
-                    ndests = {
+                    dests = {
                         y for x in dests for y in self.board.get_neighbours(x)}
-                    ndests = ndests.intersection(possible_dests)
-                    ndests = ndests.difference(dests)
+                    dests = dests.intersection(possible_dests)
+                    dests = dests.difference(all_dests)
                     # TODO: Filter out too tight fits
-                    dests = ndests
+                    all_dests.update(dests)
             elif field[3] == "ANT":
                 dests = set()
             elif field[3] == "GRASSHOPPER":
