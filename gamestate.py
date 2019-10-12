@@ -58,15 +58,17 @@ class GameState:
         moves = set()
 
         for field in self.ownfields():
-            possible_dests = self.board.red.union(self.board.blue)
-            possible_dests.discard(field)
-            possible_dests = self.get_possible_move_dests(possible_dests)
+            if field[3] != "BEETLE":
+                possible_dests = self.board.red.union(self.board.blue)
+                possible_dests.discard(field)
+                possible_dests = self.get_possible_move_dests(possible_dests)
 
             if field[3] == "BEE":
                 dests = self.board.get_neighbours(field)
                 dests = dests.intersection(possible_dests)
+                # TODO: Filter out too tight fits
             elif field[3] == "BEETLE":
-                dests = set()
+                dests = self.board.get_neighbours(field)
             elif field[3] == "SPIDER":
                 all_dests = dests.copy()
                 for _ in range(2):
@@ -77,7 +79,15 @@ class GameState:
                     # TODO: Filter out too tight fits
                     all_dests.update(dests)
             elif field[3] == "ANT":
-                dests = set()
+                while True:
+                    ndests = {
+                        y for x in dests for y in self.board.get_neighbours(x)}
+                    ndests = ndests.intersection(possible_dests)
+                    # TODO: Filter out too tight fits
+                    l = len(dests)
+                    dests.update(ndests)
+                    if len(dests) == l:
+                        break
             elif field[3] == "GRASSHOPPER":
                 dests = set()
 
