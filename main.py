@@ -9,14 +9,14 @@ if __name__ == "__main__":
 
     if test:
         import pyautogui
-        pyautogui.hotkey('alt', 'tab')
+        pyautogui.hotkey("alt", "tab")
         pyautogui.sleep(3)
         for _ in range(2):
-            pyautogui.press('tab')
-        pyautogui.press('down')
+            pyautogui.press("tab")
+        pyautogui.press("down")
         for _ in range(3):
-            pyautogui.press('tab')
-        pyautogui.press('enter')
+            pyautogui.press("tab")
+        pyautogui.press("enter")
 
     client = client.Client(host, port)
 

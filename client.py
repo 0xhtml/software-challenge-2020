@@ -14,7 +14,7 @@ class Client:
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
-        self.send('<protocol>')
+        self.send("<protocol>")
 
     def send(self, data: str):
         self.socket.send(data.encode())
@@ -25,7 +25,7 @@ class Client:
         self.send(data)
 
     def recv(self):
-        data = b''
+        data = b""
         while True:
             data += self.socket.recv(1024)
 
@@ -33,30 +33,30 @@ class Client:
                 xml = ElementTree.fromstring(data)
             except ElementTree.ParseError:
                 continue
-
-            if xml.tag == 'joined':
+            print(data)
+            if xml.tag == "joined":
                 return self.parse_joined(xml)
-            elif xml.tag == 'room':
+            elif xml.tag == "room":
                 return self.parse_room(xml)
-            elif xml.tag == 'left':
+            elif xml.tag == "left":
                 return self.parse_left(xml)
-            elif xml.tag == 'sc.protocol.responses.CloseConnection':
+            elif xml.tag == "sc.protocol.responses.CloseConnection":
                 return self.parse_close_connection(xml)
             else:
-                print('unknown')
+                print("unknown")
                 return True
 
     def parse_joined(self, xml: ElementTree.Element):
-        self.room = xml.get('roomId')
+        self.room = xml.get("roomId")
         return True
 
     def parse_room(self, xml: ElementTree.Element):
-        xmldata = xml.find('data')
-        if xmldata.get('class') == 'memento':
-            self.gamestate = gamestate.parse(xmldata.find('state'))
-        elif xmldata.get('class') == 'sc.framework.plugins.protocol.MoveRequest':
+        xmldata = xml.find("data")
+        if xmldata.get("class") == "memento":
+            self.gamestate = gamestate.parse(xmldata.find("state"))
+        elif xmldata.get("class") == "sc.framework.plugins.protocol.MoveRequest":
             self.send_move(self.bot.get(self.gamestate))
-        elif xmldata.get('class') == "error":
+        elif xmldata.get("class") == "error":
             print(xmldata.get("message"))
         return True
 
@@ -67,8 +67,8 @@ class Client:
         return False
 
     def join_any_game(self):
-        self.send('<join gameType="swc_2020_hive"/>')
-        self.socket.recv(len(b'<protocol>\n  '))
+        self.send("<join gameType=\"swc_2020_hive\"/>")
+        self.socket.recv(len(b"<protocol>\n  "))
         while self.recv():
             pass
         self.socket.close()

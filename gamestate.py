@@ -69,6 +69,7 @@ class GameState:
             elif field[3] == "BEETLE":
                 dests = self.board.get_neighbours(field)
             elif field[3] == "SPIDER":
+                dests = {field}
                 all_dests = dests.copy()
                 for _ in range(2):
                     dests = {
@@ -78,6 +79,7 @@ class GameState:
                     # TODO: Filter out too tight fits
                     all_dests.update(dests)
             elif field[3] == "ANT":
+                dests = {field}
                 while True:
                     ndests = {
                         y for x in dests for y in self.board.get_neighbours(x)}
@@ -87,6 +89,7 @@ class GameState:
                     dests.update(ndests)
                     if len(dests) == l:
                         break
+                dests.discard(field)
             elif field[3] == "GRASSHOPPER":
                 dests = set()
 
@@ -103,6 +106,6 @@ def parse(xml: ElementTree.Element):
 
     undeployed = []
     for xmlpiece in xml.findall("*/piece"):
-        undeployed.append((xmlpiece.get('owner'), xmlpiece.get('type')))
+        undeployed.append((xmlpiece.get("owner"), xmlpiece.get("type")))
 
     return GameState(color, turn, _board, undeployed)
