@@ -17,6 +17,9 @@ class GameState:
     def ownfields(self):
         return self.board.__getattribute__(self.color.lower())
 
+    def bothfields(self):
+        return self.board.red.union(self.board.blue)
+
     def get_neighbours(self, pos: tuple):
         a = (1, 0, -1)
         b = (1, -1, 0)
@@ -65,9 +68,24 @@ class GameState:
         moves = set()
 
         for field in self.ownfields():
-            # TODO: Check for swarm disconnection
+            neighbours = self.get_neighbours(field)
+            bothfields_positions = {x[:-1] for x in self.bothfields()}
+            neighbours = neighbours.intersection(bothfields_positions)
+            if len(neighbours) >= 2:
+                connecting = False
+                # TODO: Improve implementation
+                for a in neighbours:
+                    aneighbours = self.get_neighbours(a)
+                    for b in neighbours:
+                        if a == b:
+                            continue
+                        if b in aneighbours:
+                            connecting = True
+                            break
+                if not connecting:
+                    continue
 
-            possible_dests = self.board.red.union(self.board.blue)
+            possible_dests = self.bothfields()
             possible_dests.discard(field)
             possible_dests = self.get_possible_move_dests(possible_dests)
 
@@ -76,8 +94,7 @@ class GameState:
                 dests = dests.intersection(possible_dests)
                 # TODO: Filter out too tight fits
             elif field[3] == "BEETLE":
-                possible_dests.update(self.board.red)
-                possible_dests.update(self.board.blue)
+                possible_dests.update(self.bothfields())
                 possible_dests.discard(field)
                 dests = self.get_neighbours(field)
                 dests = dests.intersection(possible_dests)
