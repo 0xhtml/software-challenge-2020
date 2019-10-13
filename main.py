@@ -11,7 +11,7 @@ if __name__ == "__main__":
     if test == "autoopen":
         import pyautogui
         pyautogui.PAUSE = 0.1
-        pyautogui.hotkey("winleft", "6")
+        pyautogui.hotkey("winleft", "3")
         pyautogui.sleep(0.7)
         pyautogui.click(1032, 687)
         pyautogui.click(1658, 689)

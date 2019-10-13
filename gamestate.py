@@ -72,19 +72,9 @@ class GameState:
             neighbours = self.get_neighbours(field)
             bothfields_positions = {x[:-1] for x in self.bothfields()}
             neighbours = neighbours.intersection(bothfields_positions)
+            # TODO: Filter out neighbours that aren't critical to disconnect
             if len(neighbours) >= 2:
-                connecting = False
-                # TODO: Improve implementation
-                for a in neighbours:
-                    aneighbours = self.get_neighbours(a)
-                    for b in neighbours:
-                        if a == b:
-                            continue
-                        if b in aneighbours:
-                            connecting = True
-                            break
-                if not connecting:
-                    continue
+                continue
 
             possible_dests = self.bothfields()
             possible_dests.discard(field)
