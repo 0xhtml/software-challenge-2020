@@ -4,12 +4,16 @@ import move
 import socket
 from xml.etree import ElementTree
 import time
+import threading
 
 
 class Client:
     def __init__(self, host: str, port: int):
         self.room = None
         self.gamestate = None
+
+        self.file = f"data/{str(hex(int(time.time()*1000)))[-8:]}.xml"
+        self.thread = None
 
         self.bot = bot.Bot()
 
@@ -36,45 +40,44 @@ class Client:
                 continue
 
             if xml.tag == "joined":
-                return self.parse_joined(xml)
+                self.room = xml.get("roomId")
+                return True
             elif xml.tag == "room":
-                return self.parse_room(xml, data)
+                xmldata = xml.find("data")
+                if xmldata.get("class") == "memento":
+                    f = open(self.file, "wb")
+                    f.write(data)
+                    f.close()
+                    self.gamestate = gamestate.parse(xmldata.find("state"))
+                elif xmldata.get("class") == "sc.framework.plugins.protocol.MoveRequest":
+                    thread = threading.Thread(target=self.run_bot)
+                    thread.start()
+
+                    if self.thread != None and self.thread.is_alive():
+                        self.thread._stop()
+
+                    self.thread = thread
+                elif xmldata.get("class") == "error":
+                    print(xmldata.get("message"))
+                return True
             elif xml.tag == "left":
-                return self.parse_left(xml)
+                return False
             elif xml.tag == "sc.protocol.responses.CloseConnection":
-                return self.parse_close_connection(xml)
+                return False
             else:
                 print("unknown")
                 return True
 
-    def parse_joined(self, xml: ElementTree.Element):
-        self.room = xml.get("roomId")
-        return True
-
-    def parse_room(self, xml: ElementTree.Element, data: bytes):
-        xmldata = xml.find("data")
-        if xmldata.get("class") == "memento":
-            f = open(f"data/{str(hex(int(time.time()*1000)))[-8:]}.xml", "wb")
-            f.write(data)
-            f.close()
-            self.gamestate = gamestate.parse(xmldata.find("state"))
-        elif xmldata.get("class") == "sc.framework.plugins.protocol.MoveRequest":
-            self.send_move(self.bot.get(self.gamestate))
-        elif xmldata.get("class") == "error":
-            print(xmldata.get("message"))
-        return True
-
-    def parse_left(self, xml: ElementTree.Element):
-        return False
-
-    def parse_close_connection(self, xml: ElementTree.Element):
-        return False
+    def run_bot(self):
+        self.send_move(self.bot.get(self.gamestate))
 
     def join_any_game(self):
         self.send("<join gameType=\"swc_2020_hive\"/>")
         self.socket.recv(len(b"<protocol>\n  "))
         while self.recv():
             pass
+        if self.thread != None and self.thread.is_alive():
+            self.thread._stop()
         self.socket.close()
 
     def join_reservation(self, reservation: str):
