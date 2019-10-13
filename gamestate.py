@@ -30,10 +30,7 @@ class GameState:
             dests = self.board.get_neighbours(field)
             dests = dests.intersection(self.board.empty)
         else:
-            dests = self.ownfields()
-            dests = {y for x in dests for y in self.board.get_neighbours(x)}
-            dests = dests.intersection(self.board.empty)
-
+            dests = self.get_possible_move_dests(self.ownfields())
             def f(x):
                 neighbours = self.board.get_neighbours(x)
                 for neighbour in neighbours:
@@ -58,6 +55,8 @@ class GameState:
         moves = set()
 
         for field in self.ownfields():
+            # TODO: Check for swarm disconnection
+
             if field[3] != "BEETLE":
                 possible_dests = self.board.red.union(self.board.blue)
                 possible_dests.discard(field)
