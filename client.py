@@ -3,6 +3,7 @@ import gamestate
 import move
 import socket
 from xml.etree import ElementTree
+import time
 
 
 class Client:
@@ -33,11 +34,11 @@ class Client:
                 xml = ElementTree.fromstring(data)
             except ElementTree.ParseError:
                 continue
-            print(data)
+
             if xml.tag == "joined":
                 return self.parse_joined(xml)
             elif xml.tag == "room":
-                return self.parse_room(xml)
+                return self.parse_room(xml, data)
             elif xml.tag == "left":
                 return self.parse_left(xml)
             elif xml.tag == "sc.protocol.responses.CloseConnection":
@@ -50,9 +51,12 @@ class Client:
         self.room = xml.get("roomId")
         return True
 
-    def parse_room(self, xml: ElementTree.Element):
+    def parse_room(self, xml: ElementTree.Element, data: bytes):
         xmldata = xml.find("data")
         if xmldata.get("class") == "memento":
+            f = open(f"data/{str(hex(int(time.time()*1000)))[-8:]}.xml", "wb")
+            f.write(data)
+            f.close()
             self.gamestate = gamestate.parse(xmldata.find("state"))
         elif xmldata.get("class") == "sc.framework.plugins.protocol.MoveRequest":
             self.send_move(self.bot.get(self.gamestate))
@@ -62,7 +66,7 @@ class Client:
 
     def parse_left(self, xml: ElementTree.Element):
         return False
-    
+
     def parse_close_connection(self, xml: ElementTree.Element):
         return False
 
