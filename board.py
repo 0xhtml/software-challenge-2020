@@ -8,14 +8,6 @@ class Board:
         self.red = red
         self.blue = blue
 
-    def get_neighbours(self, pos: tuple):
-        a = (1, 0, -1)
-        b = (1, -1, 0)
-        c = (0, -1, 1)
-        d = (-1, 0, 1)
-        e = (-1, 1, 0)
-        f = (0, 1, -1)
-        return {(pos[0] + x[0], pos[1] + x[1], pos[2] + x[2]) for x in {a, b, c, d, e, f}}
 
 def parse(xml: ElementTree.Element):
     empty = set()

@@ -17,8 +17,17 @@ class GameState:
     def ownfields(self):
         return self.board.__getattribute__(self.color.lower())
 
+    def get_neighbours(self, pos: tuple):
+        a = (1, 0, -1)
+        b = (1, -1, 0)
+        c = (0, -1, 1)
+        d = (-1, 0, 1)
+        e = (-1, 1, 0)
+        f = (0, 1, -1)
+        return {(pos[0] + x[0], pos[1] + x[1], pos[2] + x[2]) for x in {a, b, c, d, e, f}}
+
     def get_possible_move_dests(self, dests):
-        dests = {y for x in dests for y in self.board.get_neighbours(x)}
+        dests = {y for x in dests for y in self.get_neighbours(x)}
         dests = dests.intersection(self.board.empty)
         return dests
 
@@ -27,12 +36,13 @@ class GameState:
             dests = self.board.empty
         elif self.turn == 1:
             field = self.oppfields().__iter__().__next__()
-            dests = self.board.get_neighbours(field)
+            dests = self.get_neighbours(field)
             dests = dests.intersection(self.board.empty)
         else:
             dests = self.get_possible_move_dests(self.ownfields())
+
             def f(x):
-                neighbours = self.board.get_neighbours(x)
+                neighbours = self.get_neighbours(x)
                 for neighbour in neighbours:
                     for oppfield in self.oppfields():
                         if neighbour == oppfield[:-1]:
@@ -63,17 +73,16 @@ class GameState:
                 possible_dests = self.get_possible_move_dests(possible_dests)
 
             if field[3] == "BEE":
-                dests = self.board.get_neighbours(field)
+                dests = self.get_neighbours(field)
                 dests = dests.intersection(possible_dests)
                 # TODO: Filter out too tight fits
             elif field[3] == "BEETLE":
-                dests = self.board.get_neighbours(field)
+                dests = self.get_neighbours(field)
             elif field[3] == "SPIDER":
                 dests = {field}
                 all_dests = dests.copy()
                 for _ in range(2):
-                    dests = {
-                        y for x in dests for y in self.board.get_neighbours(x)}
+                    dests = {y for x in dests for y in self.get_neighbours(x)}
                     dests = dests.intersection(possible_dests)
                     dests = dests.difference(all_dests)
                     # TODO: Filter out too tight fits
@@ -81,8 +90,7 @@ class GameState:
             elif field[3] == "ANT":
                 dests = {field}
                 while True:
-                    ndests = {
-                        y for x in dests for y in self.board.get_neighbours(x)}
+                    ndests = {y for x in dests for y in self.get_neighbours(x)}
                     ndests = ndests.intersection(possible_dests)
                     # TODO: Filter out too tight fits
                     l = len(dests)
