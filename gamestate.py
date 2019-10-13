@@ -67,17 +67,20 @@ class GameState:
         for field in self.ownfields():
             # TODO: Check for swarm disconnection
 
-            if field[3] != "BEETLE":
-                possible_dests = self.board.red.union(self.board.blue)
-                possible_dests.discard(field)
-                possible_dests = self.get_possible_move_dests(possible_dests)
+            possible_dests = self.board.red.union(self.board.blue)
+            possible_dests.discard(field)
+            possible_dests = self.get_possible_move_dests(possible_dests)
 
             if field[3] == "BEE":
                 dests = self.get_neighbours(field)
                 dests = dests.intersection(possible_dests)
                 # TODO: Filter out too tight fits
             elif field[3] == "BEETLE":
+                possible_dests.update(self.board.red)
+                possible_dests.update(self.board.blue)
+                possible_dests.discard(field)
                 dests = self.get_neighbours(field)
+                dests = dests.intersection(possible_dests)
             elif field[3] == "SPIDER":
                 dests = {field}
                 all_dests = dests.copy()
