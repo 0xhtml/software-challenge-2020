@@ -1,6 +1,7 @@
+from xml.etree import ElementTree
+
 import board
 import move
-from xml.etree import ElementTree
 
 
 class GameState:

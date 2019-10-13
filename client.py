@@ -1,10 +1,11 @@
+import socket
+import threading
+import time
+from xml.etree import ElementTree
+
 import bot
 import gamestate
 import move
-import socket
-from xml.etree import ElementTree
-import time
-import threading
 
 
 class Client:
