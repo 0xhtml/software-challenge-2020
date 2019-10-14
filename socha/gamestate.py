@@ -1,7 +1,6 @@
 from xml.etree import ElementTree
 
-import board
-import move
+from . import board, moves
 
 
 class GameState:
@@ -60,13 +59,13 @@ class GameState:
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
             types = {x[1] for x in undeployed}
 
-        return {move.SetMove((self.color, x), y) for x in types for y in dests}
+        return {moves.SetMove((self.color, x), y) for x in types for y in dests}
 
     def get_possible_drag_moves(self):
         if (self.color, "BEE") in self.undeployed:
             return set()
 
-        moves = set()
+        possible_moves = set()
 
         for field in self.ownfields():
             neighbours = self.get_neighbours(field)
@@ -112,9 +111,9 @@ class GameState:
             elif field[3] == "GRASSHOPPER":
                 dests = set()
 
-            moves.update(move.DragMove(field, x) for x in dests)
+            possible_moves.update(moves.DragMove(field, x) for x in dests)
 
-        return moves
+        return possible_moves
 
 
 def parse(xml: ElementTree.Element):

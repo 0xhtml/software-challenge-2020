@@ -3,9 +3,7 @@ import threading
 import time
 from xml.etree import ElementTree
 
-import bot
-import gamestate
-import move
+from . import gamestate, moves, players
 
 
 class Client:
@@ -16,7 +14,7 @@ class Client:
         self.file = f"data/{str(hex(int(time.time()*1000)))[-8:]}.xml"
         self.thread = None
 
-        self.bot = bot.Bot()
+        self.player = players.Random()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
@@ -25,7 +23,7 @@ class Client:
     def send(self, data: str):
         self.socket.send(data.encode())
 
-    def send_move(self, move: move.Move):
+    def send_move(self, move: moves.Move):
         print(move)
         data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
         self.send(data)
@@ -46,9 +44,6 @@ class Client:
             elif xml.tag == "room":
                 xmldata = xml.find("data")
                 if xmldata.get("class") == "memento":
-                    f = open(self.file, "wb")
-                    f.write(data)
-                    f.close()
                     self.gamestate = gamestate.parse(xmldata.find("state"))
                 elif xmldata.get("class") == "sc.framework.plugins.protocol.MoveRequest":
                     thread = threading.Thread(target=self.run_bot)
@@ -70,7 +65,7 @@ class Client:
                 return True
 
     def run_bot(self):
-        self.send_move(self.bot.get(self.gamestate))
+        self.send_move(self.player.get(self.gamestate))
 
     def join_any_game(self):
         self.send("<join gameType=\"swc_2020_hive\"/>")
