@@ -4,13 +4,25 @@ from socha import net
 import os
 
 
+def popen(cmd, out):
+    p = subprocess.Popen(
+        cmd.split(),
+        cwd="server",
+        stdout=out,
+        stderr=subprocess.STDOUT
+    )
+    try:
+        p.wait(5)
+        raise Exception(cmd + " didn't start")
+    except subprocess.TimeoutExpired:
+        return p
+
+
 def test_with_server():
-    server = subprocess.Popen(["java", "-jar", "server.jar"], cwd="server", stdout=open("s.log", "w"), stderr=subprocess.STDOUT)
-    time.sleep(5)
+    server = popen("java -jar server.jar", open("s.log", "w"))
 
     try:
-        player = subprocess.Popen(["java", "-jar", "defaultplayer.jar"], cwd="server", stdout=open("p.log", "w"), stderr=subprocess.STDOUT)
-        time.sleep(5)
+        player = popen("java -jar defaultplayer.jar", open("p.log", "w"))
 
         try:
             client = net.Client("localhost", 13050)
@@ -20,7 +32,5 @@ def test_with_server():
                 player.wait(5)
             except subprocess.TimeoutExpired:
                 player.terminate()
-                player.wait()
     finally:
         server.terminate()
-        server.wait()
