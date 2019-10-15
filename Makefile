@@ -17,4 +17,4 @@ clean-server:
 	rm -rf server.zip server
 
 clean:
-	rm -rf socha/*.pyc socha/__pycache__ .pytest_cache .coverage
+	rm -rf */*.pyc */__pycache__ .pytest_cache .coverage
