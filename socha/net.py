@@ -11,7 +11,6 @@ class Client:
         self.room = None
         self.gamestate = None
 
-        self.file = f"data/{str(hex(int(time.time()*1000)))[-8:]}.xml"
         self.thread = None
 
         self.player = players.Random()
@@ -24,7 +23,6 @@ class Client:
         self.socket.send(data.encode())
 
     def send_move(self, move: moves.Move):
-        print(move)
         data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
         self.send(data)
 
@@ -54,7 +52,7 @@ class Client:
 
                     self.thread = thread
                 elif xmldata.get("class") == "error":
-                    print(xmldata.get("message"))
+                    raise Exception(xmldata.get("message"))
                 return True
             elif xml.tag == "left":
                 return False
