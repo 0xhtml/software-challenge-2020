@@ -1,22 +1,20 @@
 help:
-	@echo "setup-env, setup-server, run, test or clean"
-
-setup-env:
-	test -d env || (python3 -m venv env; env/bin/pip install autopep8 pylint rope pytest)
+	@echo "setup-server, run, test or clean"
 
 setup-server:
 	test -d server || test -f server.zip || wget -O server.zip https://github.com/CAU-Kiel-Tech-Inf/socha/releases/latest/download/software-challenge-server.zip
 	test -d server || unzip server.zip -d server
 	test -f server.zip && rm server.zip || true
 
-run: setup-env
-	env/bin/python -m socha
+run:
+	python -m socha
 
-test: setup-env setup-server
-	env/bin/pytest
+test: setup-server
+	pip install pytest
+	pytest
 
 clean: clean-py
-	rm -rf env server.zip server
+	rm -rf server.zip server
 
 clean-py:
 	find socha -name '*.pyc' -exec rm -f {} +
