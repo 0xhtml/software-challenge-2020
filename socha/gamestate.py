@@ -71,8 +71,23 @@ class GameState:
             neighbours = self.get_neighbours(field)
             bothfields_positions = {x[:-1] for x in self.bothfields()}
             neighbours = neighbours.intersection(bothfields_positions)
-            # TODO: Filter out neighbours that aren't critical to disconnect
-            if len(neighbours) >= 2:
+
+            def run(branch: list):
+                next = self.get_neighbours(branch[-1])
+                next.discard(field[:-1])
+                next = next.difference(branch)
+                next = next.intersection(bothfields_positions)
+                if len(next.intersection(neighbours)) > 0:
+                    return True
+                else:
+                    return any(run(branch + [x]) for x in next)
+
+            critical_neighbours = set()
+            for neighbour in neighbours:
+                if not run([neighbour]):
+                    critical_neighbours.add(neighbour)
+
+            if len(critical_neighbours) >= 2:
                 continue
 
             possible_dests = self.bothfields()
