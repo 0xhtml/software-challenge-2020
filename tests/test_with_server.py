@@ -1,7 +1,9 @@
-import subprocess
-import time
-from socha import net
 import os
+import subprocess
+import sys
+import time
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from socha import net
 
 
 def popen(cmd, out):
@@ -19,10 +21,10 @@ def popen(cmd, out):
 
 
 def test_with_server():
-    server = popen("java -jar server.jar", open("s.log", "w"))
+    server = popen("java -jar server.jar", open(os.devnull, "w"))
 
     try:
-        player = popen("java -jar defaultplayer.jar", open("p.log", "w"))
+        player = popen("java -jar defaultplayer.jar", open(os.devnull, "w"))
 
         try:
             client = net.Client("localhost", 13050)

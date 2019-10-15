@@ -13,10 +13,8 @@ test: setup-server
 	pip install pytest
 	pytest
 
-clean: clean-py
+clean-server:
 	rm -rf server.zip server
 
-clean-py:
-	find socha -name '*.pyc' -exec rm -f {} +
-	find socha -name '__pycache__' -exec rm -rf {} +
-	rm -rf .pytest_cache *.log
+clean:
+	rm -rf socha/*.pyc socha/__pycache__ .pytest_cache .coverage
