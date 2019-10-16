@@ -72,22 +72,18 @@ class GameState:
             bothfields_positions = {x[:-1] for x in self.bothfields()}
             neighbours = neighbours.intersection(bothfields_positions)
 
-            def run(branch: list):
-                next = self.get_neighbours(branch[-1])
-                next.discard(field[:-1])
-                next = next.difference(branch)
+            def search(found, next):
+                next = self.get_neighbours(next)
+                next = next.difference(found)
                 next = next.intersection(bothfields_positions)
-                if len(next.intersection(neighbours)) > 0:
-                    return True
-                else:
-                    return any(run(branch + [x]) for x in next)
+                found.update(next)
+                for snext in next:
+                    found.update(search(found, snext))
+                return found
 
-            critical_neighbours = set()
-            for neighbour in neighbours:
-                if not run([neighbour]):
-                    critical_neighbours.add(neighbour)
-
-            if len(critical_neighbours) >= 2:
+            first = neighbours.pop()
+            res = search({first, field[:-1]}, first)
+            if len(res) < len(self.bothfields()):
                 continue
 
             possible_dests = self.bothfields()
