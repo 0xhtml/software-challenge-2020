@@ -59,7 +59,7 @@ class GameState:
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
             types = {x[1] for x in undeployed}
 
-        return {moves.SetMove((self.color, x), y) for x in types for y in dests}
+        return {moves.SetMove((self.color, y), x) for x in dests for y in types}
 
     def get_possible_drag_moves(self):
         if (self.color, "BEE") in self.undeployed:
