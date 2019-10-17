@@ -26,7 +26,7 @@ class Client:
         data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
         self.send(data)
 
-    def recv(self):
+    def recv(self) -> bool:
         data = b""
         while True:
             data += self.socket.recv(1024)

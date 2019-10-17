@@ -9,7 +9,7 @@ class Board:
         self.blue = blue
 
 
-def parse(xml: ElementTree.Element):
+def parse(xml: ElementTree.Element) -> Board:
     empty = set()
     obstructed = set()
     red = set()

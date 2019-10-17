@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from socha import net
 
 
-def popen(cmd, out):
+def popen(cmd: str, out) -> subprocess.Popen:
     p = subprocess.Popen(
         cmd.split(),
         cwd="server",

@@ -11,7 +11,7 @@ class SetMove(Move):
         self.piece = piece
         self.pos = pos
 
-    def to_xml(self):
+    def to_xml(self) -> str:
         return f"""
         <data class="setmove">
             <piece owner="{self.piece[0]}" type="{self.piece[1]}"/>
@@ -19,7 +19,7 @@ class SetMove(Move):
         </data>
         """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"SetMove({self.piece}, {self.pos})"
 
 
@@ -28,7 +28,7 @@ class DragMove(Move):
         self.start = start
         self.dest = dest
 
-    def to_xml(self):
+    def to_xml(self) -> str:
         return f"""
         <data class="dragmove">
             <start x="{self.start[0]}" y="{self.start[1]}" z="{self.start[2]}"/>
@@ -36,7 +36,7 @@ class DragMove(Move):
         </data>
         """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"DragMove({self.start}, {self.dest})"
 
 
@@ -44,8 +44,8 @@ class MissMove(Move):
     def __init__(self):
         pass
 
-    def to_xml(self):
+    def to_xml(self) -> str:
         return "<data class=\"missmove\"/>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"MissMove()"
