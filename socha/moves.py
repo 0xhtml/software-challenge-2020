@@ -14,8 +14,8 @@ class SetMove(Move):
     def to_xml(self):
         return f"""
         <data class="setmove">
-            <piece owner="{self.piece[0]}" type="{self.piece[1]}"/>
-            <destination x="{self.pos[0]}" y="{self.pos[1]}" z="{self.pos[2]}"/>
+        <piece owner="{self.piece[0]}" type="{self.piece[1]}"/>
+        <destination x="{self.pos[0]}" y="{self.pos[1]}" z="{self.pos[2]}"/>
         </data>
         """
 
@@ -31,8 +31,8 @@ class DragMove(Move):
     def to_xml(self):
         return f"""
         <data class="dragmove">
-            <start x="{self.start[0]}" y="{self.start[1]}" z="{self.start[2]}"/>
-            <destination x="{self.dest[0]}" y="{self.dest[1]}" z="{self.dest[2]}"/>
+        <start x="{self.start[0]}" y="{self.start[1]}" z="{self.start[2]}"/>
+        <destination x="{self.dest[0]}" y="{self.dest[1]}" z="{self.dest[2]}"/>
         </data>
         """
 

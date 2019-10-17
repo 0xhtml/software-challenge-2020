@@ -6,13 +6,6 @@ setup-server:
 	test -d server || unzip server.zip -d server
 	test -f server.zip && rm server.zip || true
 
-run:
-	python -m socha
-
-test: setup-server
-	pip install pytest
-	pytest
-
 clean-server:
 	rm -rf server.zip server
 
