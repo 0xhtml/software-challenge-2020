@@ -10,17 +10,17 @@ class GameState:
         self.board = board
         self.undeployed = undep
 
-    def oppfields(self):
+    def oppfields(self) -> set:
         color = "blue" if self.color == "RED" else "red"
         return self.board.__getattribute__(color)
 
-    def ownfields(self):
+    def ownfields(self) -> set:
         return self.board.__getattribute__(self.color.lower())
 
-    def bothfields(self):
+    def bothfields(self) -> set:
         return self.board.red.union(self.board.blue)
 
-    def get_neighbours(self, pos: tuple):
+    def get_neighbours(self, pos: tuple) -> set:
         a = (1, 0, -1)
         b = (1, -1, 0)
         c = (0, -1, 1)
@@ -32,12 +32,12 @@ class GameState:
             for x in {a, b, c, d, e, f}
         }
 
-    def get_possible_move_dests(self, dests):
+    def get_possible_move_dests(self, dests: set) -> set:
         dests = {y for x in dests for y in self.get_neighbours(x)}
         dests = dests.intersection(self.board.empty)
         return dests
 
-    def get_possible_set_moves(self):
+    def get_possible_set_moves(self) -> set:
         if self.turn == 0:
             dests = self.board.empty
         elif self.turn == 1:
@@ -68,7 +68,7 @@ class GameState:
             for y in types
         }
 
-    def get_possible_drag_moves(self):
+    def get_possible_drag_moves(self) -> set:
         if (self.color, "BEE") in self.undeployed:
             return set()
 
@@ -134,7 +134,7 @@ class GameState:
         return possible_moves
 
 
-def parse(xml: ElementTree.Element):
+def parse(xml: ElementTree.Element) -> GameState:
     color = xml.get("currentPlayerColor")
     turn = int(xml.get("turn"))
 
