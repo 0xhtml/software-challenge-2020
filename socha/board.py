@@ -22,7 +22,7 @@ def parse(xml: ElementTree.Element):
             if xmlfield.get("isObstructed") == "true":
                 obstructed.add((x, y, z))
             else:
-                if xmlfield.find("piece") != None:
+                if xmlfield.find("piece") is not None:
                     xmlpiece = xmlfield.find("piece")
                     if xmlpiece.get("owner") == "RED":
                         red.add((x, y, z, xmlpiece.get("type")))

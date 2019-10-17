@@ -1,6 +1,5 @@
 import socket
 import threading
-import time
 from xml.etree import ElementTree
 
 from . import gamestate, moves, players
@@ -41,17 +40,18 @@ class Client:
                 return True
             elif xml.tag == "room":
                 xmldata = xml.find("data")
-                if xmldata.get("class") == "memento":
+                xmlclass = xmldata.get("class")
+                if xmlclass == "memento":
                     self.gamestate = gamestate.parse(xmldata.find("state"))
-                elif xmldata.get("class") == "sc.framework.plugins.protocol.MoveRequest":
+                elif xmlclass == "sc.framework.plugins.protocol.MoveRequest":
                     thread = threading.Thread(target=self.run_bot)
                     thread.start()
 
-                    if self.thread != None and self.thread.is_alive():
+                    if self.thread is not None and self.thread.is_alive():
                         self.thread._stop()
 
                     self.thread = thread
-                elif xmldata.get("class") == "error":
+                elif xmlclass == "error":
                     raise Exception(xmldata.get("message"))
                 return True
             elif xml.tag == "left":
@@ -70,7 +70,7 @@ class Client:
         self.socket.recv(len(b"<protocol>\n  "))
         while self.recv():
             pass
-        if self.thread != None and self.thread.is_alive():
+        if self.thread is not None and self.thread.is_alive():
             self.thread._stop()
         self.socket.close()
 

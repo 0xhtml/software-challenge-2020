@@ -4,11 +4,11 @@ from . import board, moves
 
 
 class GameState:
-    def __init__(self, color: str, turn: int, board: board.Board, undeployed: set):
+    def __init__(self, color: str, turn: int, board: board.Board, undep: set):
         self.color = color
         self.turn = turn
         self.board = board
-        self.undeployed = undeployed
+        self.undeployed = undep
 
     def oppfields(self):
         color = "blue" if self.color == "RED" else "red"
@@ -27,7 +27,10 @@ class GameState:
         d = (-1, 0, 1)
         e = (-1, 1, 0)
         f = (0, 1, -1)
-        return {(pos[0] + x[0], pos[1] + x[1], pos[2] + x[2]) for x in {a, b, c, d, e, f}}
+        return {
+            (pos[0] + x[0], pos[1] + x[1], pos[2] + x[2])
+            for x in {a, b, c, d, e, f}
+        }
 
     def get_possible_move_dests(self, dests):
         dests = {y for x in dests for y in self.get_neighbours(x)}
@@ -59,7 +62,11 @@ class GameState:
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
             types = {x[1] for x in undeployed}
 
-        return {moves.SetMove((self.color, y), x) for x in dests for y in types}
+        return {
+            moves.SetMove((self.color, y), x)
+            for x in dests
+            for y in types
+        }
 
     def get_possible_drag_moves(self):
         if (self.color, "BEE") in self.undeployed:
@@ -114,9 +121,9 @@ class GameState:
                     ndests = {y for x in dests for y in self.get_neighbours(x)}
                     ndests = ndests.intersection(possible_dests)
                     # TODO: Filter out too tight fits
-                    l = len(dests)
+                    old_len = len(dests)
                     dests.update(ndests)
-                    if len(dests) == l:
+                    if len(dests) == old_len:
                         break
                 dests.discard(field)
             elif field[3] == "GRASSHOPPER":
