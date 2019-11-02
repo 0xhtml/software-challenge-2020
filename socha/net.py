@@ -30,6 +30,9 @@ class Client:
         while True:
             data += self.socket.recv(1024)
 
+            if data.endswith("</protocol>"):
+                return False
+
             try:
                 xml = ElementTree.fromstring(data)
             except ElementTree.ParseError:
