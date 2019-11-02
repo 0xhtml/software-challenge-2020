@@ -22,18 +22,36 @@ class Client:
         self.socket.send(data.encode())
 
     def send_move(self, move: moves.Move):
+        print(move)
         data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
         self.send(data)
 
     def recv(self) -> bool:
         data = b""
+        opened_tags = 0
+        tags = 0
         while True:
-            data += self.socket.recv(1024)
+            data += self.socket.recv(1)
 
-            try:
-                xml = ElementTree.fromstring(data)
-            except ElementTree.ParseError:
+            if len(data) < 2:
                 continue
+
+            if data[-2:] == b"</" or data[-2:] == b"/>":
+                opened_tags -= 1
+            elif data[-2] == 60:
+                opened_tags += 1
+                tags += 1
+
+            if opened_tags == -1:
+                return False
+
+            if opened_tags != 0 or tags == 0:
+                continue
+
+            while not data.endswith(b">"):
+                data += self.socket.recv(1)
+
+            xml = ElementTree.fromstring(data)
 
             if xml.tag == "joined":
                 self.room = xml.get("roomId")
