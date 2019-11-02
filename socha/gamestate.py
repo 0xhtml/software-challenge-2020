@@ -10,6 +10,14 @@ class GameState:
         self.board = board
         self.undeployed = undeployed
 
+        a = (1, 0, -1)
+        b = (1, -1, 0)
+        c = (0, -1, 1)
+        d = (-1, 0, 1)
+        e = (-1, 1, 0)
+        f = (0, 1, -1)
+        self.directions = {a, b, c, d, e, f}
+
     def oppfields(self):
         color = "blue" if self.color == "RED" else "red"
         return self.board.__getattribute__(color)
@@ -20,14 +28,11 @@ class GameState:
     def bothfields(self):
         return self.board.red.union(self.board.blue)
 
+    def validfields(self):
+        return self.board.red.union(self.board.blue).union(self.board.empty)
+
     def get_neighbours(self, pos: tuple):
-        a = (1, 0, -1)
-        b = (1, -1, 0)
-        c = (0, -1, 1)
-        d = (-1, 0, 1)
-        e = (-1, 1, 0)
-        f = (0, 1, -1)
-        return {(pos[0] + x[0], pos[1] + x[1], pos[2] + x[2]) for x in {a, b, c, d, e, f}}
+        return {(pos[0] + x[0], pos[1] + x[1], pos[2] + x[2]) for x in self.directions}
 
     def get_possible_move_dests(self, dests):
         dests = {y for x in dests for y in self.get_neighbours(x)}
@@ -58,6 +63,7 @@ class GameState:
         else:
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
             types = {x[1] for x in undeployed}
+            types = filter(lambda x: x == "GRASSHOPPER" or x == "BEE", types)
 
         return {moves.SetMove((self.color, y), x) for x in dests for y in types}
 
@@ -66,6 +72,7 @@ class GameState:
             return set()
 
         possible_moves = set()
+        validfields = {x[:3] for x in self.validfields()}
 
         for field in self.ownfields():
             neighbours = self.get_neighbours(field)
@@ -93,7 +100,6 @@ class GameState:
             if field[3] == "BEE":
                 dests = self.get_neighbours(field)
                 dests = dests.intersection(possible_dests)
-                # TODO: Filter out too tight fits
             elif field[3] == "BEETLE":
                 possible_dests.update(self.bothfields())
                 possible_dests.discard(field)
@@ -106,14 +112,12 @@ class GameState:
                     dests = {y for x in dests for y in self.get_neighbours(x)}
                     dests = dests.intersection(possible_dests)
                     dests = dests.difference(all_dests)
-                    # TODO: Filter out too tight fits
                     all_dests.update(dests)
             elif field[3] == "ANT":
                 dests = {field}
                 while True:
                     ndests = {y for x in dests for y in self.get_neighbours(x)}
                     ndests = ndests.intersection(possible_dests)
-                    # TODO: Filter out too tight fits
                     l = len(dests)
                     dests.update(ndests)
                     if len(dests) == l:
@@ -121,6 +125,14 @@ class GameState:
                 dests.discard(field)
             elif field[3] == "GRASSHOPPER":
                 dests = set()
+                for x, y, z in self.directions:
+                    nfield = (field[0] + x, field[1] + y, field[2] + z)
+                    if nfield in self.board.empty:
+                        continue
+                    while nfield not in self.board.empty and nfield in validfields:
+                        nfield = (nfield[0] + x, nfield[1] + y, nfield[2] + z)
+                    if nfield in validfields:
+                        dests.add(nfield)
 
             possible_moves.update(moves.DragMove(field, x) for x in dests)
 
