@@ -1,6 +1,5 @@
 import socket
 import threading
-import time
 from xml.etree import ElementTree
 
 from . import gamestate, moves, players
@@ -23,35 +22,54 @@ class Client:
         self.socket.send(data.encode())
 
     def send_move(self, move: moves.Move):
+        print(move)
         data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
         self.send(data)
 
-    def recv(self):
+    def recv(self) -> bool:
         data = b""
+        opened_tags = 0
+        tags = 0
         while True:
-            data += self.socket.recv(1024)
+            data += self.socket.recv(1)
 
-            try:
-                xml = ElementTree.fromstring(data)
-            except ElementTree.ParseError:
+            if len(data) < 2:
                 continue
+
+            if data[-2:] == b"</" or data[-2:] == b"/>":
+                opened_tags -= 1
+            elif data[-2] == 60:
+                opened_tags += 1
+                tags += 1
+
+            if opened_tags == -1:
+                return False
+
+            if opened_tags != 0 or tags == 0:
+                continue
+
+            while not data.endswith(b">"):
+                data += self.socket.recv(1)
+
+            xml = ElementTree.fromstring(data)
 
             if xml.tag == "joined":
                 self.room = xml.get("roomId")
                 return True
             elif xml.tag == "room":
                 xmldata = xml.find("data")
-                if xmldata.get("class") == "memento":
+                xmlclass = xmldata.get("class")
+                if xmlclass == "memento":
                     self.gamestate = gamestate.parse(xmldata.find("state"))
-                elif xmldata.get("class") == "sc.framework.plugins.protocol.MoveRequest":
+                elif xmlclass == "sc.framework.plugins.protocol.MoveRequest":
                     thread = threading.Thread(target=self.run_bot)
                     thread.start()
 
-                    if self.thread != None and self.thread.is_alive():
+                    if self.thread is not None and self.thread.is_alive():
                         self.thread._stop()
 
                     self.thread = thread
-                elif xmldata.get("class") == "error":
+                elif xmlclass == "error":
                     raise Exception(xmldata.get("message"))
                 return True
             elif xml.tag == "left":
@@ -70,7 +88,7 @@ class Client:
         self.socket.recv(len(b"<protocol>\n  "))
         while self.recv():
             pass
-        if self.thread != None and self.thread.is_alive():
+        if self.thread is not None and self.thread.is_alive():
             self.thread._stop()
         self.socket.close()
 

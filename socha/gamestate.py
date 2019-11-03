@@ -4,11 +4,11 @@ from . import board, moves
 
 
 class GameState:
-    def __init__(self, color: str, turn: int, board: board.Board, undeployed: set):
+    def __init__(self, color: str, turn: int, board: board.Board, undep: set):
         self.color = color
         self.turn = turn
         self.board = board
-        self.undeployed = undeployed
+        self.undeployed = undep
 
         a = (1, 0, -1)
         b = (1, -1, 0)
@@ -18,28 +18,32 @@ class GameState:
         f = (0, 1, -1)
         self.directions = {a, b, c, d, e, f}
 
-    def oppfields(self):
+    def oppfields(self) -> set:
         color = "blue" if self.color == "RED" else "red"
         return self.board.__getattribute__(color)
 
-    def ownfields(self):
+    def ownfields(self) -> set:
         return self.board.__getattribute__(self.color.lower())
 
-    def bothfields(self):
+    def bothfields(self) -> set:
         return self.board.red.union(self.board.blue)
 
     def validfields(self):
         return self.board.red.union(self.board.blue).union(self.board.empty)
 
-    def get_neighbours(self, pos: tuple):
-        return {(pos[0] + x[0], pos[1] + x[1], pos[2] + x[2]) for x in self.directions}
+    def get_neighbours(self, pos: tuple) -> set:
+        return {
+            (pos[0] + x[0], pos[1] + x[1], pos[2] + x[2])
+            for x in self.directions
+        }
 
-    def get_possible_move_dests(self, dests):
+
+    def get_possible_move_dests(self, dests: set) -> set:
         dests = {y for x in dests for y in self.get_neighbours(x)}
         dests = dests.intersection(self.board.empty)
         return dests
 
-    def get_possible_set_moves(self):
+    def get_possible_set_moves(self) -> set:
         if self.turn == 0:
             dests = self.board.empty
         elif self.turn == 1:
@@ -65,9 +69,13 @@ class GameState:
             types = {x[1] for x in undeployed}
             types = filter(lambda x: x == "GRASSHOPPER" or x == "BEE", types)
 
-        return {moves.SetMove((self.color, y), x) for x in dests for y in types}
+        return {
+            moves.SetMove((self.color, y), x)
+            for x in dests
+            for y in types
+        }
 
-    def get_possible_drag_moves(self):
+    def get_possible_drag_moves(self) -> set:
         if (self.color, "BEE") in self.undeployed:
             return set()
 
@@ -149,7 +157,7 @@ class GameState:
         return dests
 
 
-def parse(xml: ElementTree.Element):
+def parse(xml: ElementTree.Element) -> GameState:
     color = xml.get("currentPlayerColor")
     turn = int(xml.get("turn"))
 
