@@ -28,7 +28,7 @@ class GameState:
     def bothfields(self) -> set:
         return self.board.red.union(self.board.blue)
 
-    def validfields(self):
+    def validfields(self) -> set:
         return self.board.red.union(self.board.blue).union(self.board.empty)
 
     def get_neighbours(self, pos: tuple) -> set:
