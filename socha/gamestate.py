@@ -93,36 +93,14 @@ class GameState:
             if len(res) < len(self.bothfields()):
                 continue
 
-            possible_dests = self.bothfields()
-            possible_dests.discard(field)
-            possible_dests = self.get_possible_move_dests(possible_dests)
-
+            if field[3] == "BEETLE":
+                dests = self.get_beetle_move_dests(field)
             if field[3] == "BEE":
-                dests = self.get_neighbours(field)
-                dests = dests.intersection(possible_dests)
-            elif field[3] == "BEETLE":
-                possible_dests.update(self.bothfields())
-                possible_dests.discard(field)
-                dests = self.get_neighbours(field)
-                dests = dests.intersection(possible_dests)
+                dests = self.get_bee_move_dests(field)
             elif field[3] == "SPIDER":
-                dests = {field}
-                all_dests = dests.copy()
-                for _ in range(2):
-                    dests = {y for x in dests for y in self.get_neighbours(x)}
-                    dests = dests.intersection(possible_dests)
-                    dests = dests.difference(all_dests)
-                    all_dests.update(dests)
+                dests = self.get_spider_move_dests(field)
             elif field[3] == "ANT":
-                dests = {field}
-                while True:
-                    ndests = {y for x in dests for y in self.get_neighbours(x)}
-                    ndests = ndests.intersection(possible_dests)
-                    l = len(dests)
-                    dests.update(ndests)
-                    if len(dests) == l:
-                        break
-                dests.discard(field)
+                dests = self.get_ant_move_dests(field)
             elif field[3] == "GRASSHOPPER":
                 dests = set()
                 for x, y, z in self.directions:
@@ -133,10 +111,42 @@ class GameState:
                         nfield = (nfield[0] + x, nfield[1] + y, nfield[2] + z)
                     if nfield in validfields:
                         dests.add(nfield)
+            else:
+                dests = set()
 
             possible_moves.update(moves.DragMove(field, x) for x in dests)
 
         return possible_moves
+
+    def get_beetle_move_dests(self, field: tuple) -> set:
+        dests = self.get_neighbours(field)
+        dests = dests.difference(self.board.obstructed)
+        return dests
+
+    def get_bee_move_dests(self, field: tuple) -> set:
+        dests = self.get_beetle_move_dests(field)
+        dests.intersection(self.board.empty)
+        return dests
+
+    def get_spider_move_dests(self, field: tuple) -> set:
+        dests = {field}
+        all_dests = dests.copy()
+        for _ in range(2):
+            dests = {y for x in dests for y in self.get_bee_move_dests(x)}
+            dests = dests.difference(all_dests)
+            all_dests.update(dests)
+        return dests
+
+    def get_ant_move_dests(self, field: tuple) -> set:
+        dests = {field}
+        while True:
+            ndests = {y for x in dests for y in self.get_bee_move_dests(x)}
+            l = len(dests)
+            dests.update(ndests)
+            if len(dests) == l:
+                break
+        dests.discard(field)
+        return dests
 
 
 def parse(xml: ElementTree.Element):
