@@ -40,7 +40,7 @@ class GameState:
 
     def get_possible_move_dests(self, dests: set) -> set:
         dests = {y for x in dests for y in self.get_neighbours(x)}
-        dests = dests.intersection(self.board.empty)
+        dests = dests.difference(self.board.obstructed)
         return dests
 
     def get_possible_set_moves(self) -> set:
@@ -52,6 +52,7 @@ class GameState:
             dests = dests.intersection(self.board.empty)
         else:
             dests = self.get_possible_move_dests(self.ownfields())
+            dests = dests.intersection(self.board.empty)
 
             def f(x):
                 neighbours = self.get_neighbours(x)
@@ -67,7 +68,6 @@ class GameState:
         else:
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
             types = {x[1] for x in undeployed}
-            types = filter(lambda x: x == "GRASSHOPPER" or x == "BEE", types)
 
         return {
             moves.SetMove((self.color, y), x)
@@ -128,7 +128,9 @@ class GameState:
 
     def get_beetle_move_dests(self, field: tuple) -> set:
         dests = self.get_neighbours(field)
-        dests = dests.difference(self.board.obstructed)
+        possible_dests = self.bothfields().difference({field})
+        possible_dests = self.get_possible_move_dests(possible_dests)
+        dests = dests.intersection(possible_dests)
         return dests
 
     def get_bee_move_dests(self, field: tuple) -> set:
