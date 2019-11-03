@@ -37,6 +37,13 @@ class GameState:
             for x in self.directions
         }
 
+    def is_connected(self, fields: set) -> bool:
+        next = {fields.pop()}
+        while len(next) > 0:
+            next = {y for x in next for y in self.get_neighbours(x)}
+            next = next.intersection(fields)
+            fields = fields.difference(next)
+        return len(fields) == 0
 
     def get_possible_move_dests(self, dests: set) -> set:
         dests = {y for x in dests for y in self.get_neighbours(x)}
@@ -83,22 +90,8 @@ class GameState:
         validfields = {x[:3] for x in self.validfields()}
 
         for field in self.ownfields():
-            neighbours = self.get_neighbours(field)
-            bothfields_positions = {x[:-1] for x in self.bothfields()}
-            neighbours = neighbours.intersection(bothfields_positions)
-
-            def search(found, next):
-                next = self.get_neighbours(next)
-                next = next.difference(found)
-                next = next.intersection(bothfields_positions)
-                found.update(next)
-                for snext in next:
-                    found.update(search(found, snext))
-                return found
-
-            first = neighbours.pop()
-            res = search({first, field[:-1]}, first)
-            if len(res) < len(self.bothfields()):
+            fields = self.bothfields().difference({field})
+            if not self.is_connected(fields):
                 continue
 
             if field[3] == "BEETLE":
