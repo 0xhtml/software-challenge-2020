@@ -121,14 +121,15 @@ class GameState:
 
     def get_beetle_move_dests(self, field: tuple) -> set:
         dests = self.get_neighbours(field)
-        possible_dests = self.bothfields().difference({field})
+        possible_dests = self.bothfields()
+        possible_dests.discard(field)
         possible_dests = self.get_possible_move_dests(possible_dests)
-        dests = dests.intersection(possible_dests)
+        dests.intersection_update(possible_dests)
         return dests
 
     def get_bee_move_dests(self, field: tuple) -> set:
         dests = self.get_beetle_move_dests(field)
-        dests.intersection(self.board.empty)
+        dests.intersection_update(self.board.empty)
         return dests
 
     def get_spider_move_dests(self, field: tuple) -> set:
@@ -136,7 +137,7 @@ class GameState:
         all_dests = dests.copy()
         for _ in range(2):
             dests = {y for x in dests for y in self.get_bee_move_dests(x)}
-            dests = dests.difference(all_dests)
+            dests.difference_update(all_dests)
             all_dests.update(dests)
         return dests
 
