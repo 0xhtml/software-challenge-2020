@@ -16,7 +16,7 @@ class GameState:
         d = (-1, 0, 1)
         e = (-1, 1, 0)
         f = (0, 1, -1)
-        self.directions = {a, b, c, d, e, f}
+        self.directions = [a, b, c, d, e, f]
 
     def oppfields(self) -> set:
         color = "blue" if self.color == "RED" else "red"
@@ -41,8 +41,8 @@ class GameState:
         next = {fields.pop()}
         while len(next) > 0:
             next = {y for x in next for y in self.get_neighbours(x)}
-            next = next.intersection(fields)
-            fields = fields.difference(next)
+            next.intersection_update(fields)
+            fields.difference_update(next)
         return len(fields) == 0
 
     def get_possible_move_dests(self, dests: set) -> set:
@@ -90,7 +90,9 @@ class GameState:
         validfields = {x[:3] for x in self.validfields()}
 
         for field in self.ownfields():
-            fields = self.bothfields().difference({field})
+            fields = self.bothfields()
+            fields.discard(field)
+            fields = {x[:3] for x in self.bothfields()}
             if not self.is_connected(fields):
                 continue
 
