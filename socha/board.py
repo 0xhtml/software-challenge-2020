@@ -9,6 +9,7 @@ class Board:
         self.obstructed = obstructed
         self.red = red
         self.blue = blue
+        self.both_fields = red.union(blue)
 
 
 def parse(xml: ElementTree.Element) -> Board:
