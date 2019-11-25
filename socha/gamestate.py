@@ -128,7 +128,7 @@ class GameState:
     def get_spider_move_dests(self, field: tuple) -> set:
         dests = {field}
         all_dests = dests.copy()
-        for _ in range(2):
+        for _ in range(3):
             dests = {y for x in dests for y in self.get_bee_move_dests(x)}
             dests.difference_update(all_dests)
             all_dests.update(dests)
