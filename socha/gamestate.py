@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 
-from . import board, moves
+from . import board, moves, pos
 
 
 class GameState:
@@ -9,14 +9,14 @@ class GameState:
         self.turn = turn
         self.board = board
         self.undeployed = undep
-
-        a = (1, 0, -1)
-        b = (1, -1, 0)
-        c = (0, -1, 1)
-        d = (-1, 0, 1)
-        e = (-1, 1, 0)
-        f = (0, 1, -1)
-        self.directions = [a, b, c, d, e, f]
+        self.directions = [
+            (1, 0),
+            (1, -1),
+            (0, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, 1)
+        ]
 
     def oppfields(self) -> set:
         color = "blue" if self.color == "RED" else "red"
@@ -31,11 +31,8 @@ class GameState:
     def validfields(self) -> set:
         return self.board.red.union(self.board.blue).union(self.board.empty)
 
-    def get_neighbours(self, pos: tuple) -> set:
-        return {
-            (pos[0] + x[0], pos[1] + x[1], pos[2] + x[2])
-            for x in self.directions
-        }
+    def get_neighbours(self, pos: pos.Pos) -> set:
+        return {pos + x for x in self.directions}
 
     def is_connected(self, fields: set) -> bool:
         next = {fields.pop()}
@@ -65,7 +62,7 @@ class GameState:
                 neighbours = self.get_neighbours(x)
                 for neighbour in neighbours:
                     for oppfield in self.oppfields():
-                        if neighbour == oppfield[:-1]:
+                        if neighbour == oppfield:
                             return False
                 return True
             dests = filter(f, dests)
@@ -87,33 +84,21 @@ class GameState:
             return set()
 
         possible_moves = set()
-        validfields = {x[:3] for x in self.validfields()}
 
         for field in self.ownfields():
             fields = self.bothfields()
             fields.discard(field)
-            fields = {x[:3] for x in self.bothfields()}
             if not self.is_connected(fields):
                 continue
 
-            if field[3] == "BEETLE":
+            if field.t == "BEETLE":
                 dests = self.get_beetle_move_dests(field)
-            elif field[3] == "BEE":
+            elif field.t == "BEE":
                 dests = self.get_bee_move_dests(field)
-            elif field[3] == "SPIDER":
+            elif field.t == "SPIDER":
                 dests = self.get_spider_move_dests(field)
-            elif field[3] == "ANT":
+            elif field.t == "ANT":
                 dests = self.get_ant_move_dests(field)
-            elif field[3] == "GRASSHOPPER":
-                dests = set()
-                for x, y, z in self.directions:
-                    nfield = (field[0] + x, field[1] + y, field[2] + z)
-                    if nfield in self.board.empty:
-                        continue
-                    while nfield not in self.board.empty and nfield in validfields:
-                        nfield = (nfield[0] + x, nfield[1] + y, nfield[2] + z)
-                    if nfield in validfields:
-                        dests.add(nfield)
             else:
                 dests = set()
 
@@ -133,21 +118,9 @@ class GameState:
         dests = self.get_beetle_move_dests(field)
         dests.intersection_update(self.board.empty)
         for i in range(6):
-            a = (
-                field[0] + self.directions[i][0],
-                field[1] + self.directions[i][1],
-                field[2] + self.directions[i][2]
-            )
-            b = (
-                field[0] + self.directions[(i + 1) % 6][0],
-                field[1] + self.directions[(i + 1) % 6][1],
-                field[2] + self.directions[(i + 1) % 6][2]
-            )
-            c = (
-                field[0] + self.directions[(i + 2) % 6][0],
-                field[1] + self.directions[(i + 2) % 6][1],
-                field[2] + self.directions[(i + 2) % 6][2]
-            )
+            a = field + self.directions[i]
+            b = field + self.directions[(i + 1) % 6]
+            c = field + self.directions[(i + 2) % 6]
             if a not in self.board.empty and c not in self.board.empty:
                 dests.discard(b)
         return dests
