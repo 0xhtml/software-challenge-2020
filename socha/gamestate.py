@@ -98,7 +98,7 @@ class GameState:
 
             if field[3] == "BEETLE":
                 dests = self.get_beetle_move_dests(field)
-            if field[3] == "BEE":
+            elif field[3] == "BEE":
                 dests = self.get_bee_move_dests(field)
             elif field[3] == "SPIDER":
                 dests = self.get_spider_move_dests(field)
@@ -125,13 +125,31 @@ class GameState:
         dests = self.get_neighbours(field)
         possible_dests = self.bothfields()
         possible_dests.discard(field)
-        possible_dests = self.get_possible_move_dests(possible_dests)
+        possible_dests.update(self.get_possible_move_dests(possible_dests))
         dests.intersection_update(possible_dests)
         return dests
 
     def get_bee_move_dests(self, field: tuple) -> set:
         dests = self.get_beetle_move_dests(field)
         dests.intersection_update(self.board.empty)
+        for i in range(6):
+            a = (
+                field[0] + self.directions[i][0],
+                field[1] + self.directions[i][1],
+                field[2] + self.directions[i][2]
+            )
+            b = (
+                field[0] + self.directions[(i + 1) % 6][0],
+                field[1] + self.directions[(i + 1) % 6][1],
+                field[2] + self.directions[(i + 1) % 6][2]
+            )
+            c = (
+                field[0] + self.directions[(i + 2) % 6][0],
+                field[1] + self.directions[(i + 2) % 6][1],
+                field[2] + self.directions[(i + 2) % 6][2]
+            )
+            if a not in self.board.empty and c not in self.board.empty:
+                dests.discard(b)
         return dests
 
     def get_spider_move_dests(self, field: tuple) -> set:
