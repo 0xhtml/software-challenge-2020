@@ -6,7 +6,7 @@ class Pos():
         self.t = t
 
     def __eq__(self, other) -> bool:
-        return self.x == other.x and self.y == other.y
+        return self.__hash__() == other.__hash__()
 
     def __hash__(self) -> int:
         return hash((self.x, self.y))
