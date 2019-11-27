@@ -16,7 +16,6 @@ class Client:
         self.player = players.Random()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(0.1)
         self.socket.connect((host, port))
         self.send("<protocol>")
 
@@ -28,25 +27,32 @@ class Client:
         data = f"<room roomId=\"{self.room}\">{move.__xml__()}</room>"
         self.send(data)
 
-    def recv(self) -> bool:
-        data = b""
+    def recv(self):
+        done = False
+        while not done:
+            data = b""
+            while True:
+                data += self.socket.recv(1048576)  # 1MB
 
-        while True:
-            try:
-                data += self.socket.recv(1024)
-            except socket.timeout:
-                break
+                if not data.startswith(b"<protocol>"):
+                    full_data = b"<protocol>" + data
+                else:
+                    full_data = data
 
-        if len(data) == 0:
-            return True
+                if not data.endswith(b"</protocol>"):
+                    full_data += b"</protocol>"
+                else:
+                    done = True
 
-        if not data.startswith(b"<protocol>"):
-            data = b"<protocol>" + data
-        if not data.endswith(b"</protocol>"):
-            data += b"</protocol>"
+                try:
+                    xml = ElementTree.fromstring(full_data)
+                    break
+                except ElementTree.ParseError:
+                    pass
 
-        xml = ElementTree.fromstring(data)
+            self.parse(xml)
 
+    def parse(self, xml: ElementTree.Element):
         for tag in xml:
             if tag.tag == "joined":
                 self.room = tag.get("roomId")
@@ -69,15 +75,10 @@ class Client:
                     log.debug(f"Unknown tag <room class=\"{tagclass}\">")
             elif tag.tag == "left":
                 log.debug("<left>")
-                return False
             elif tag.tag == "sc.protocol.responses.CloseConnection":
                 log.debug("<sc.protocol.responses.CloseConnection>")
-                return False
             else:
-                print(data)
                 log.debug(f"Unknown tag <{tag.tag}>")
-
-        return True
 
     def run_bot(self):
         self.send_move(self.player.get(self.gamestate))
@@ -85,13 +86,9 @@ class Client:
     def join_any_game(self):
         log.info("Joining any game")
         self.send("<join gameType=\"swc_2020_hive\"/>")
-        while self.recv():
-            pass
+        self.recv()
+        self.socket.close()
 
     def join_reservation(self, reservation: str):
         log.info("Joining reservation")
         pass
-
-    def stop(self):
-        self.send("</protocol>\r\n")
-        self.socket.close()
