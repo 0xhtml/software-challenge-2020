@@ -129,7 +129,11 @@ class GameState:
         dests = {field}
         all_dests = dests.copy()
         for _ in range(3):
-            dests = {y for x in dests for y in self.get_bee_move_dests(x, field)}
+            dests = {
+                y
+                for x in dests
+                for y in self.get_bee_move_dests(x, field)
+            }
             dests.difference_update(all_dests)
             all_dests.update(dests)
         return dests
@@ -137,10 +141,14 @@ class GameState:
     def get_ant_move_dests(self, field: tuple) -> set:
         dests = {field}
         while True:
-            ndests = {y for x in dests for y in self.get_bee_move_dests(x, field)}
-            l = len(dests)
+            ndests = {
+                y
+                for x in dests
+                for y in self.get_bee_move_dests(x, field)
+            }
+            count = len(dests)
             dests.update(ndests)
-            if len(dests) == l:
+            if len(dests) == count:
                 break
         dests.discard(field)
         return dests
