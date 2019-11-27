@@ -115,7 +115,28 @@ def test_beetle_move():
         }
     )
 
-# TODO: Grasshopper
+def test_grasshopper_move():
+    drag(
+        {
+            pos.Pos(0, 0, "GRASSHOPPER"),
+            pos.Pos(-1, 0, "SPIDER"),
+            pos.Pos(0, -2, "SPIDER"),
+            pos.Pos(2, -2, "SPIDER"),
+            pos.Pos(2, 0, "SPIDER"),
+            pos.Pos(0, -1, "ANT"),
+            pos.Pos(1, -2, "ANT"),
+            pos.Pos(2, -1, "BEETLE"),
+            pos.Pos(3, 0, "BEETLE"),
+            pos.Pos(1, 1, "BEETLE"),
+            pos.Pos(1, 0, "BEE"),
+            pos.Pos(4, -1, "BEE")
+        },
+        {
+            (-2, 0),
+            (0, -3),
+            (4, 0)
+        }
+    )
 
 def test_spider_move():
     drag(

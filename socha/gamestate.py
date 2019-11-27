@@ -89,6 +89,8 @@ class GameState:
                 dests = self.get_spider_move_dests(field)
             elif field.t == "ANT":
                 dests = self.get_ant_move_dests(field)
+            elif field.t == "GRASSHOPPER":
+                dests = self.get_grasshopper_move_dests(field)
             else:
                 dests = set()
 
@@ -141,6 +143,20 @@ class GameState:
             if len(dests) == l:
                 break
         dests.discard(field)
+        return dests
+
+    def get_grasshopper_move_dests(self, field: tuple) -> set:
+        dests = set()
+        for direction in self.directions:
+            dest = field + direction
+            if dest in self.board.empty:
+                continue
+            while dest in self.board.both_fields:
+                dest += direction
+                if dest in self.board.obstructed:
+                    break
+            dests.add(dest)
+        dests.intersection_update(self.board.empty)
         return dests
 
 
