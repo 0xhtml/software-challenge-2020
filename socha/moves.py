@@ -39,9 +39,9 @@ class DragMove(Move):
         return f"DragMove({self.start}, {self.dest})"
 
 
-class MissMove(Move):
+class SkipMove(Move):
     def __xml__(self) -> str:
-        return "<data class=\"missmove\"/>"
+        return "<data class=\"skipmove\"/>"
 
     def __str__(self) -> str:
-        return f"MissMove()"
+        return f"SkipMove()"
