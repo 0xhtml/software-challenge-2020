@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 
-from . import board, moves
+from . import board, moves, pos
 
 
 class GameState:
@@ -9,49 +9,50 @@ class GameState:
         self.turn = turn
         self.board = board
         self.undeployed = undep
+        self.directions = [
+            (1, 0),
+            (1, -1),
+            (0, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, 1)
+        ]
 
-    def oppfields(self) -> set:
+    def own_fields(self) -> set:
+        return self.board.__getattribute__(self.color.lower())
+
+    def opp_fields(self) -> set:
         color = "blue" if self.color == "RED" else "red"
         return self.board.__getattribute__(color)
 
-    def ownfields(self) -> set:
-        return self.board.__getattribute__(self.color.lower())
+    def get_neighbours(self, pos: pos.Pos) -> set:
+        return {pos + x for x in self.directions}
 
-    def bothfields(self) -> set:
-        return self.board.red.union(self.board.blue)
-
-    def get_neighbours(self, pos: tuple) -> set:
-        a = (1, 0, -1)
-        b = (1, -1, 0)
-        c = (0, -1, 1)
-        d = (-1, 0, 1)
-        e = (-1, 1, 0)
-        f = (0, 1, -1)
-        return {
-            (pos[0] + x[0], pos[1] + x[1], pos[2] + x[2])
-            for x in {a, b, c, d, e, f}
-        }
-
-    def get_possible_move_dests(self, dests: set) -> set:
-        dests = {y for x in dests for y in self.get_neighbours(x)}
-        dests = dests.intersection(self.board.empty)
-        return dests
+    def is_connected(self, fields: set) -> bool:
+        next = {fields.pop()}
+        while len(next) > 0:
+            next = {y for x in next for y in self.get_neighbours(x)}
+            next.intersection_update(fields)
+            fields.difference_update(next)
+        return len(fields) == 0
 
     def get_possible_set_moves(self) -> set:
         if self.turn == 0:
             dests = self.board.empty
         elif self.turn == 1:
-            field = self.oppfields().__iter__().__next__()
+            field = self.opp_fields().__iter__().__next__()
             dests = self.get_neighbours(field)
             dests = dests.intersection(self.board.empty)
         else:
-            dests = self.get_possible_move_dests(self.ownfields())
+            dests = self.own_fields()
+            dests = {y for x in dests for y in self.get_neighbours(x)}
+            dests = dests.intersection(self.board.empty)
 
             def f(x):
                 neighbours = self.get_neighbours(x)
                 for neighbour in neighbours:
-                    for oppfield in self.oppfields():
-                        if neighbour == oppfield[:-1]:
+                    for oppfield in self.opp_fields():
+                        if neighbour == oppfield:
                             return False
                 return True
             dests = filter(f, dests)
@@ -74,64 +75,97 @@ class GameState:
 
         possible_moves = set()
 
-        for field in self.ownfields():
-            neighbours = self.get_neighbours(field)
-            bothfields_positions = {x[:-1] for x in self.bothfields()}
-            neighbours = neighbours.intersection(bothfields_positions)
-
-            def search(found, next):
-                next = self.get_neighbours(next)
-                next = next.difference(found)
-                next = next.intersection(bothfields_positions)
-                found.update(next)
-                for snext in next:
-                    found.update(search(found, snext))
-                return found
-
-            first = neighbours.pop()
-            res = search({first, field[:-1]}, first)
-            if len(res) < len(self.bothfields()):
+        for field in self.own_fields():
+            fields = self.board.both_fields.copy()
+            fields.discard(field)
+            if not self.is_connected(fields):
                 continue
 
-            possible_dests = self.bothfields()
-            possible_dests.discard(field)
-            possible_dests = self.get_possible_move_dests(possible_dests)
-
-            if field[3] == "BEE":
-                dests = self.get_neighbours(field)
-                dests = dests.intersection(possible_dests)
-                # TODO: Filter out too tight fits
-            elif field[3] == "BEETLE":
-                possible_dests.update(self.bothfields())
-                possible_dests.discard(field)
-                dests = self.get_neighbours(field)
-                dests = dests.intersection(possible_dests)
-            elif field[3] == "SPIDER":
-                dests = {field}
-                all_dests = dests.copy()
-                for _ in range(2):
-                    dests = {y for x in dests for y in self.get_neighbours(x)}
-                    dests = dests.intersection(possible_dests)
-                    dests = dests.difference(all_dests)
-                    # TODO: Filter out too tight fits
-                    all_dests.update(dests)
-            elif field[3] == "ANT":
-                dests = {field}
-                while True:
-                    ndests = {y for x in dests for y in self.get_neighbours(x)}
-                    ndests = ndests.intersection(possible_dests)
-                    # TODO: Filter out too tight fits
-                    old_len = len(dests)
-                    dests.update(ndests)
-                    if len(dests) == old_len:
-                        break
-                dests.discard(field)
-            elif field[3] == "GRASSHOPPER":
+            if field.t == "BEETLE":
+                dests = self.get_beetle_move_dests(field, field)
+            elif field.t == "BEE":
+                dests = self.get_bee_move_dests(field, field)
+            elif field.t == "SPIDER":
+                dests = self.get_spider_move_dests(field)
+            elif field.t == "ANT":
+                dests = self.get_ant_move_dests(field)
+            elif field.t == "GRASSHOPPER":
+                dests = self.get_grasshopper_move_dests(field)
+            else:
                 dests = set()
 
             possible_moves.update(moves.DragMove(field, x) for x in dests)
 
         return possible_moves
+
+    def get_beetle_move_dests(self, field: pos.Pos, sfield: pos.Pos) -> set:
+        dests = self.board.both_fields.difference({sfield})
+        dests = {y for x in dests for y in self.get_neighbours(x)}
+        dests.intersection_update(self.board.empty)
+        dests.update(self.board.both_fields)
+        dests.intersection_update(self.get_neighbours(field))
+        both_fields = self.board.both_fields.difference({sfield})
+        for i in range(6):
+            a = field + self.directions[i]
+            b = field + self.directions[(i + 1) % 6]
+            c = field + self.directions[(i + 2) % 6]
+            if a not in both_fields and c not in both_fields:
+                dests.discard(b)
+        return dests
+
+    def get_bee_move_dests(self, field: pos.Pos, sfield: pos.Pos) -> set:
+        dests = self.get_beetle_move_dests(field, sfield)
+        dests.intersection_update(self.board.empty)
+        both_fields = self.board.both_fields.difference({sfield})
+        for i in range(6):
+            a = field + self.directions[i]
+            b = field + self.directions[(i + 1) % 6]
+            c = field + self.directions[(i + 2) % 6]
+            if a in both_fields and c in both_fields:
+                dests.discard(b)
+        return dests
+
+    def get_spider_move_dests(self, field: pos.Pos) -> set:
+        dests = {field}
+        all_dests = dests.copy()
+        for _ in range(3):
+            dests = {
+                y
+                for x in dests
+                for y in self.get_bee_move_dests(x, field)
+            }
+            dests.difference_update(all_dests)
+            all_dests.update(dests)
+        return dests
+
+    def get_ant_move_dests(self, field: tuple) -> set:
+        dests = {field}
+        while True:
+            ndests = {
+                y
+                for x in dests
+                for y in self.get_bee_move_dests(x, field)
+            }
+            count = len(dests)
+            dests.update(ndests)
+            if len(dests) == count:
+                break
+        dests.discard(field)
+        return dests
+
+    def get_grasshopper_move_dests(self, field: tuple) -> set:
+        dests = set()
+        for direction in self.directions:
+            dest = field + direction
+            if dest in self.board.empty:
+                continue
+            while dest in self.board.both_fields:
+                dest += direction
+                if dest in self.board.obstructed:
+                    break
+            dests.add(dest)
+        dests.intersection_update(self.board.empty)
+        return dests
 
 
 def parse(xml: ElementTree.Element) -> GameState:

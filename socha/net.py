@@ -23,7 +23,7 @@ class Client:
 
     def send_move(self, move: moves.Move):
         print(move)
-        data = f"<room roomId=\"{self.room}\">{move.to_xml()}</room>"
+        data = f"<room roomId=\"{self.room}\">{move.__xml__()}</room>"
         self.send(data)
 
     def recv(self) -> bool:

@@ -1,5 +1,7 @@
 from xml.etree import ElementTree
 
+from . import pos
+
 
 class Board:
     def __init__(self, empty: set, obstructed: set, red: set, blue: set):
@@ -7,6 +9,7 @@ class Board:
         self.obstructed = obstructed
         self.red = red
         self.blue = blue
+        self.both_fields = red.union(blue)
 
 
 def parse(xml: ElementTree.Element) -> Board:
@@ -18,16 +21,15 @@ def parse(xml: ElementTree.Element) -> Board:
         for xmlfield in xmlfields.findall("field"):
             x = int(xmlfield.get("x"))
             y = int(xmlfield.get("y"))
-            z = int(xmlfield.get("z"))
             if xmlfield.get("isObstructed") == "true":
-                obstructed.add((x, y, z))
+                obstructed.add(pos.Pos(x, y))
             else:
                 if xmlfield.find("piece") is not None:
                     xmlpiece = xmlfield.find("piece")
                     if xmlpiece.get("owner") == "RED":
-                        red.add((x, y, z, xmlpiece.get("type")))
+                        red.add(pos.Pos(x, y, xmlpiece.get("type")))
                     else:
-                        blue.add((x, y, z, xmlpiece.get("type")))
+                        blue.add(pos.Pos(x, y, xmlpiece.get("type")))
                 else:
-                    empty.add((x, y, z))
+                    empty.add(pos.Pos(x, y))
     return Board(empty, obstructed, red, blue)
