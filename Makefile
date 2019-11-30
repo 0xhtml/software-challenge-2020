@@ -1,13 +1,28 @@
 help:
-	@echo "setup-server, run, test or clean"
+	@echo "run, pytest, flake8 and clean"
+
+setup-pip:
+	python -m pip install --upgrade pip
+
+setup-pytest: setup-server setup-pip
+	pip install pytest
+
+setup-flake8: setup-pip
+	pip install flake8
 
 setup-server:
-	test -d server || test -f server.zip || wget -O server.zip https://github.com/CAU-Kiel-Tech-Inf/socha/releases/latest/download/software-challenge-server.zip
-	test -d server || unzip server.zip -d server
-	test -f server.zip && rm server.zip || true
+	wget -O server.zip https://github.com/CAU-Kiel-Tech-Inf/socha/releases/latest/download/software-challenge-server.zip
+	unzip -u server.zip -d server
+	rm server.zip
 
-clean-server:
-	rm -rf server.zip server
+run:
+	python -m socha
+
+pytest: setup-pytest
+	pytest
+
+flake8: setup-flake8
+	flake8 socha
 
 clean:
-	rm -rf */*.pyc */__pycache__ .pytest_cache .coverage
+	rm -rf */*.pyc */__pycache__ .pytest_cache server.zip
