@@ -2,7 +2,7 @@ import socket
 import threading
 from xml.etree import ElementTree
 
-from . import gamestate, moves, players
+from . import gamestate, moves, players, log
 
 
 class Client:
@@ -12,6 +12,7 @@ class Client:
 
         self.thread = None
 
+        log.info("Using random player")
         self.player = players.Random()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,46 +23,47 @@ class Client:
         self.socket.send(data.encode())
 
     def send_move(self, move: moves.Move):
-        print(move)
+        log.info(f"Send move {move}")
         data = f"<room roomId=\"{self.room}\">{move.__xml__()}</room>"
         self.send(data)
 
-    def recv(self) -> bool:
-        data = b""
-        opened_tags = 0
-        tags = 0
-        while True:
-            data += self.socket.recv(1)
+    def recv(self):
+        done = False
+        while not done:
+            data = b""
+            while True:
+                data += self.socket.recv(1048576)  # 1MB
 
-            if len(data) < 2:
-                continue
+                if not data.startswith(b"<protocol>"):
+                    full_data = b"<protocol>" + data
+                else:
+                    full_data = data
 
-            if data[-2:] == b"</" or data[-2:] == b"/>":
-                opened_tags -= 1
-            elif data[-2] == 60:
-                opened_tags += 1
-                tags += 1
+                if not data.endswith(b"</protocol>"):
+                    full_data += b"</protocol>"
+                else:
+                    done = True
 
-            if opened_tags == -1:
-                return False
+                try:
+                    xml = ElementTree.fromstring(full_data)
+                    log.debug(data[:200])
+                    break
+                except ElementTree.ParseError:
+                    log.debug("Stopped receving too early")
+                    pass
 
-            if opened_tags != 0 or tags == 0:
-                continue
+            self.parse(xml)
 
-            while not data.endswith(b">"):
-                data += self.socket.recv(1)
-
-            xml = ElementTree.fromstring(data)
-
-            if xml.tag == "joined":
-                self.room = xml.get("roomId")
-                return True
-            elif xml.tag == "room":
-                xmldata = xml.find("data")
-                xmlclass = xmldata.get("class")
-                if xmlclass == "memento":
-                    self.gamestate = gamestate.parse(xmldata.find("state"))
-                elif xmlclass == "sc.framework.plugins.protocol.MoveRequest":
+    def parse(self, xml: ElementTree.Element):
+        for tag in xml:
+            if tag.tag == "joined":
+                self.room = tag.get("roomId")
+            elif tag.tag == "room":
+                tagdata = tag.find("data")
+                tagclass = tagdata.get("class")
+                if tagclass == "memento":
+                    self.gamestate = gamestate.parse(tagdata.find("state"))
+                elif tagclass == "sc.framework.plugins.protocol.MoveRequest":
                     thread = threading.Thread(target=self.run_bot)
                     thread.start()
 
@@ -69,28 +71,34 @@ class Client:
                         self.thread._stop()
 
                     self.thread = thread
-                elif xmlclass == "error":
-                    raise Exception(xmldata.get("message"))
-                return True
-            elif xml.tag == "left":
-                return False
-            elif xml.tag == "sc.protocol.responses.CloseConnection":
-                return False
+                elif tagclass == "error":
+                    log.error(tagdata.get("message"))
+                else:
+                    log.debug(f"Unknown tag <room class=\"{tagclass}\">")
+            elif tag.tag == "left":
+                log.debug("<left>")
+                self.send("<sc.protocol.responses.CloseConnection />")
+                self.send("</protocol>")
+            elif tag.tag == "sc.protocol.responses.CloseConnection":
+                log.debug("<sc.protocol.responses.CloseConnection>")
+                self.send("</protocol>")
             else:
-                print("unknown")
-                return True
+                log.debug(f"Unknown tag <{tag.tag}>")
 
     def run_bot(self):
         self.send_move(self.player.get(self.gamestate))
 
     def join_any_game(self):
+        log.info("Joining any game")
         self.send("<join gameType=\"swc_2020_hive\"/>")
-        self.socket.recv(len(b"<protocol>\n  "))
-        while self.recv():
-            pass
-        if self.thread is not None and self.thread.is_alive():
-            self.thread._stop()
+        try:
+            self.recv()
+        except KeyboardInterrupt:
+            self.send("<sc.protocol.responses.CloseConnection />")
+            self.send("</protocol>")
+            self.recv()
         self.socket.close()
 
     def join_reservation(self, reservation: str):
+        log.info("Joining reservation")
         pass
