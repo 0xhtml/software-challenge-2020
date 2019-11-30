@@ -46,8 +46,10 @@ class Client:
 
                 try:
                     xml = ElementTree.fromstring(full_data)
+                    log.debug(data[:200])
                     break
                 except ElementTree.ParseError:
+                    log.debug("Stopped receving too early")
                     pass
 
             self.parse(xml)
@@ -75,8 +77,11 @@ class Client:
                     log.debug(f"Unknown tag <room class=\"{tagclass}\">")
             elif tag.tag == "left":
                 log.debug("<left>")
+                self.send("<sc.protocol.responses.CloseConnection />")
+                self.send("</protocol>")
             elif tag.tag == "sc.protocol.responses.CloseConnection":
                 log.debug("<sc.protocol.responses.CloseConnection>")
+                self.send("</protocol>")
             else:
                 log.debug(f"Unknown tag <{tag.tag}>")
 
@@ -86,7 +91,12 @@ class Client:
     def join_any_game(self):
         log.info("Joining any game")
         self.send("<join gameType=\"swc_2020_hive\"/>")
-        self.recv()
+        try:
+            self.recv()
+        except KeyboardInterrupt:
+            self.send("<sc.protocol.responses.CloseConnection />")
+            self.send("</protocol>")
+            self.recv()
         self.socket.close()
 
     def join_reservation(self, reservation: str):
