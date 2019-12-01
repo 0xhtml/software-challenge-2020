@@ -23,6 +23,7 @@ class Client:
         self.socket.send(data.encode())
 
     def send_move(self, move: moves.Move):
+        log.debug(self.gamestate.board)
         log.info(f"Send move {move}")
         data = f"<room roomId=\"{self.room}\">{move.__xml__()}</room>"
         self.send(data)
