@@ -1,9 +1,9 @@
 class Pos():
-    def __init__(self, x: int, y: int, t: str = None):
+    def __init__(self, x: int, y: int, pieces: list = None):
         self.x = x
         self.y = y
         self.z = (-x) + (-y)
-        self.t = t
+        self.pieces = pieces
 
     def __eq__(self, other) -> bool:
         if isinstance(other, type(self)):
@@ -16,9 +16,9 @@ class Pos():
         return (self.x, self.y).__hash__()
 
     def __str__(self) -> str:
-        if self.t is not None:
-            return f"({self.x}, {self.y}, {self.z}, \"{self.t}\")"
-        return f"({self.x}, {self.y}, {self.z})"
+        if self.pieces is not None:
+            return f"({self.x}, {self.y}, {self.pieces})"
+        return f"({self.x}, {self.y})"
 
     def __add__(self, other):
         if isinstance(other, type(self)):

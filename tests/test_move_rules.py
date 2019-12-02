@@ -33,17 +33,17 @@ def drag(pieces, dests, obs=set()):
 def test_basic1_move():
     drag(
         {
-            pos.Pos(0, 0, "BEE"),
-            pos.Pos(0, 1, "GRASSHOPPER"),
-            pos.Pos(1, -1, "SPIDER"),
-            pos.Pos(2, -1, "ANT"),
-            pos.Pos(2, -2, "ANT"),
-            pos.Pos(0, -1, "ANT"),
-            pos.Pos(2, 0, "BEETLE"),
-            pos.Pos(1, 1, "BEETLE"),
-            pos.Pos(0, -1, "BEETLE"),
-            pos.Pos(2, -2, "GRASSHOPPER"),
-            pos.Pos(3, -3, "BEE")
+            pos.Pos(0, 0, ["BEE"]),
+            pos.Pos(0, 1, ["GRASSHOPPER"]),
+            pos.Pos(1, -1, ["SPIDER"]),
+            pos.Pos(2, -1, ["ANT"]),
+            pos.Pos(2, -2, ["ANT"]),
+            pos.Pos(0, -1, ["ANT"]),
+            pos.Pos(2, 0, ["BEETLE"]),
+            pos.Pos(1, 1, ["BEETLE"]),
+            pos.Pos(0, -1, ["BEETLE"]),
+            pos.Pos(2, -2, ["GRASSHOPPER"]),
+            pos.Pos(3, -3, ["BEE"])
         },
         {
             (-1, 0),
@@ -54,12 +54,12 @@ def test_basic1_move():
 def test_basic2_move():
     drag(
         {
-            pos.Pos(0, 0, "BEETLE"),
-            pos.Pos(0, 1, "SPIDER"),
-            pos.Pos(2, -2, "SPIDER"),
-            pos.Pos(1, -2, "BEETLE"),
-            pos.Pos(1, 0, "BEE"),
-            pos.Pos(2, -1, "BEE")
+            pos.Pos(0, 0, ["BEETLE"]),
+            pos.Pos(0, 1, ["SPIDER"]),
+            pos.Pos(2, -2, ["SPIDER"]),
+            pos.Pos(1, -2, ["BEETLE"]),
+            pos.Pos(1, 0, ["BEE"]),
+            pos.Pos(2, -1, ["BEE"])
         },
         {
             (-1, 1),
@@ -75,15 +75,15 @@ def test_basic2_move():
 def test_bee_move():
     drag(
         {
-            pos.Pos(0, 0, "BEE"),
-            pos.Pos(-1, 0, "GRASSHOPPER"),
-            pos.Pos(-1, -1, "SPIDER"),
-            pos.Pos(0, -2, "ANT"),
-            pos.Pos(1, -2, "BEETLE"),
-            pos.Pos(1, 0, "BEETLE"),
-            pos.Pos(2, -1, "GRASSHOPPER"),
-            pos.Pos(2, -2, "SPIDER"),
-            pos.Pos(3, -3, "BEE")
+            pos.Pos(0, 0, ["BEE"]),
+            pos.Pos(-1, 0, ["GRASSHOPPER"]),
+            pos.Pos(-1, -1, ["SPIDER"]),
+            pos.Pos(0, -2, ["ANT"]),
+            pos.Pos(1, -2, ["BEETLE"]),
+            pos.Pos(1, 0, ["BEETLE"]),
+            pos.Pos(2, -1, ["GRASSHOPPER"]),
+            pos.Pos(2, -2, ["SPIDER"]),
+            pos.Pos(3, -3, ["BEE"])
         },
         {
             (-1, 1),
@@ -99,12 +99,12 @@ def test_bee_move():
 def test_beetle_move():
     drag(
         {
-            pos.Pos(1, 0, "BEE"),
-            pos.Pos(0, 1, "SPIDER"),
-            pos.Pos(0, 0, "BEETLE"),
-            pos.Pos(-1, 1, "SPIDER"),
-            pos.Pos(-2, 0, "BEE"),
-            pos.Pos(-2, 1, "ANT")
+            pos.Pos(1, 0, ["BEE"]),
+            pos.Pos(0, 1, ["SPIDER"]),
+            pos.Pos(0, 0, ["BEETLE"]),
+            pos.Pos(-1, 1, ["SPIDER"]),
+            pos.Pos(-2, 0, ["BEE"]),
+            pos.Pos(-2, 1, ["ANT"])
         },
         {
             (1, 0),
@@ -118,18 +118,18 @@ def test_beetle_move():
 def test_grasshopper_move():
     drag(
         {
-            pos.Pos(0, 0, "GRASSHOPPER"),
-            pos.Pos(-1, 0, "SPIDER"),
-            pos.Pos(0, -2, "SPIDER"),
-            pos.Pos(2, -2, "SPIDER"),
-            pos.Pos(2, 0, "SPIDER"),
-            pos.Pos(0, -1, "ANT"),
-            pos.Pos(1, -2, "ANT"),
-            pos.Pos(2, -1, "BEETLE"),
-            pos.Pos(3, 0, "BEETLE"),
-            pos.Pos(1, 1, "BEETLE"),
-            pos.Pos(1, 0, "BEE"),
-            pos.Pos(4, -1, "BEE")
+            pos.Pos(0, 0, ["GRASSHOPPER"]),
+            pos.Pos(-1, 0, ["SPIDER"]),
+            pos.Pos(0, -2, ["SPIDER"]),
+            pos.Pos(2, -2, ["SPIDER"]),
+            pos.Pos(2, 0, ["SPIDER"]),
+            pos.Pos(0, -1, ["ANT"]),
+            pos.Pos(1, -2, ["ANT"]),
+            pos.Pos(2, -1, ["BEETLE"]),
+            pos.Pos(3, 0, ["BEETLE"]),
+            pos.Pos(1, 1, ["BEETLE"]),
+            pos.Pos(1, 0, ["BEE"]),
+            pos.Pos(4, -1, ["BEE"])
         },
         {
             (-2, 0),
@@ -141,19 +141,19 @@ def test_grasshopper_move():
 def test_spider_move():
     drag(
         {
-            pos.Pos(0, 0, "SPIDER"),
-            pos.Pos(0, -1, "ANT"),
-            pos.Pos(0, -2, "GRASSHOPPER"),
-            pos.Pos(-1, -2, "ANT"),
-            pos.Pos(-1, -3, "ANT"),
-            pos.Pos(-2, -2, "BEETLE"),
-            pos.Pos(-3, -1, "GRASSHOPPER"),
-            pos.Pos(-4, 0, "ANT"),
-            pos.Pos(-4, 1, "BEE"),
-            pos.Pos(-4, 2, "ANT"),
-            pos.Pos(-3, 1, "GRASSHOPPER"),
-            pos.Pos(-3, 2, "BEE"),
-            pos.Pos(-2, 1, "BEETLE"),
+            pos.Pos(0, 0, ["SPIDER"]),
+            pos.Pos(0, -1, ["ANT"]),
+            pos.Pos(0, -2, ["GRASSHOPPER"]),
+            pos.Pos(-1, -2, ["ANT"]),
+            pos.Pos(-1, -3, ["ANT"]),
+            pos.Pos(-2, -2, ["BEETLE"]),
+            pos.Pos(-3, -1, ["GRASSHOPPER"]),
+            pos.Pos(-4, 0, ["ANT"]),
+            pos.Pos(-4, 1, ["BEE"]),
+            pos.Pos(-4, 2, ["ANT"]),
+            pos.Pos(-3, 1, ["GRASSHOPPER"]),
+            pos.Pos(-3, 2, ["BEE"]),
+            pos.Pos(-2, 1, ["BEETLE"]),
         },
         {
             (1, -3),
@@ -169,17 +169,17 @@ def test_spider_move():
 def test_ant_move():
     drag(
         {
-            pos.Pos(0, 0, "ANT"),
-            pos.Pos(-1, 0, "BEE"),
-            pos.Pos(0, -1, "GRASSHOPPER"),
-            pos.Pos(-1, -1, "GRASSHOPPER"),
-            pos.Pos(-1, -2, "BEETLE"),
-            pos.Pos(-3, -1, "ANT"),
-            pos.Pos(-4, 0, "BEE"),
-            pos.Pos(-3, 1, "BEETLE"),
-            pos.Pos(-4, 2, "ANT"),
-            pos.Pos(-4, 1, "SPIDER"),
-            pos.Pos(-2, 1, "SPIDER")
+            pos.Pos(0, 0, ["ANT"]),
+            pos.Pos(-1, 0, ["BEE"]),
+            pos.Pos(0, -1, ["GRASSHOPPER"]),
+            pos.Pos(-1, -1, ["GRASSHOPPER"]),
+            pos.Pos(-1, -2, ["BEETLE"]),
+            pos.Pos(-3, -1, ["ANT"]),
+            pos.Pos(-4, 0, ["BEE"]),
+            pos.Pos(-3, 1, ["BEETLE"]),
+            pos.Pos(-4, 2, ["ANT"]),
+            pos.Pos(-4, 1, ["SPIDER"]),
+            pos.Pos(-2, 1, ["SPIDER"])
         },
         {
             (1, -1),

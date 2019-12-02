@@ -25,11 +25,15 @@ def parse(xml: ElementTree.Element) -> Board:
                 obstructed.add(pos.Pos(x, y))
             else:
                 if xmlfield.find("piece") is not None:
-                    xmlpiece = xmlfield.find("piece")
-                    if xmlpiece.get("owner") == "RED":
-                        red.add(pos.Pos(x, y, xmlpiece.get("type")))
+                    pieces = []
+                    owner = None
+                    for xmlpiece in xmlfield:
+                        owner = xmlpiece.get("owner")
+                        pieces.append(xmlpiece.get("type"))
+                    if owner == "RED":
+                        red.add(pos.Pos(x, y, pieces))
                     else:
-                        blue.add(pos.Pos(x, y, xmlpiece.get("type")))
+                        blue.add(pos.Pos(x, y, pieces))
                 else:
                     empty.add(pos.Pos(x, y))
     return Board(empty, obstructed, red, blue)
