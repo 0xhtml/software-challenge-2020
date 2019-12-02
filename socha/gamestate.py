@@ -117,6 +117,7 @@ class GameState:
         dests = self.get_beetle_move_dests(field, sfield)
         dests.intersection_update(self.board.empty)
         both_fields = self.board.both_fields.difference({sfield})
+        both_fields.update(self.board.obstructed)
         for i in range(6):
             a = field + self.directions[i]
             b = field + self.directions[(i + 1) % 6]
