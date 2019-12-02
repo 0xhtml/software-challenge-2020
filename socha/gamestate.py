@@ -81,15 +81,15 @@ class GameState:
             if not self.is_connected(fields):
                 continue
 
-            if field.t == "BEETLE":
+            if field.pieces[-1] == "BEETLE":
                 dests = self.get_beetle_move_dests(field, field)
-            elif field.t == "BEE":
+            elif field.pieces[-1] == "BEE":
                 dests = self.get_bee_move_dests(field, field)
-            elif field.t == "SPIDER":
+            elif field.pieces[-1] == "SPIDER":
                 dests = self.get_spider_move_dests(field)
-            elif field.t == "ANT":
+            elif field.pieces[-1] == "ANT":
                 dests = self.get_ant_move_dests(field)
-            elif field.t == "GRASSHOPPER":
+            elif field.pieces[-1] == "GRASSHOPPER":
                 dests = self.get_grasshopper_move_dests(field)
             else:
                 dests = set()

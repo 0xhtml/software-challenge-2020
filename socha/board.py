@@ -43,13 +43,13 @@ class Board:
             elif position in self.red:
                 for position2 in self.red:
                     if position2 == position:
-                        t = position2.t[0]
+                        t = position2.pieces[-1][0]
                         break
                 s = s.replace("X", "R" + t, 1)
             elif position in self.blue:
                 for position2 in self.blue:
                     if position2 == position:
-                        t = position2.t[0]
+                        t = position2.pieces[-1][0]
                         break
                 s = s.replace("X", "B" + t, 1)
             elif position in self.obstructed:
@@ -72,11 +72,15 @@ def parse(xml: ElementTree.Element) -> Board:
                 obstructed.add(pos.Pos(x, y))
             else:
                 if xmlfield.find("piece") is not None:
-                    xmlpiece = xmlfield.find("piece")
-                    if xmlpiece.get("owner") == "RED":
-                        red.add(pos.Pos(x, y, xmlpiece.get("type")))
+                    pieces = []
+                    owner = None
+                    for xmlpiece in xmlfield:
+                        owner = xmlpiece.get("owner")
+                        pieces.append(xmlpiece.get("type"))
+                    if owner == "RED":
+                        red.add(pos.Pos(x, y, pieces))
                     else:
-                        blue.add(pos.Pos(x, y, xmlpiece.get("type")))
+                        blue.add(pos.Pos(x, y, pieces))
                 else:
                     empty.add(pos.Pos(x, y))
     return Board(empty, obstructed, red, blue)
