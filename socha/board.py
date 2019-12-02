@@ -1,39 +1,49 @@
 from xml.etree import ElementTree
 
-from . import pos
-
 
 class Board:
-    def __init__(self, empty: set, obstructed: set, red: set, blue: set):
-        self.empty = empty
+    def __init__(self, fields: dict, obstructed: set):
+        self.fields = fields
         self.obstructed = obstructed
-        self.red = red
-        self.blue = blue
-        self.both_fields = red.union(blue)
+
+    def empty(self):
+        empty = set()
+        for pos in self.fields:
+            if len(self.fields[pos]) == 0:
+                empty.add(pos)
+        return empty
+
+    def nonempty(self):
+        nonempty = set()
+        for pos in self.fields:
+            if len(self.fields[pos]) > 0:
+                nonempty.add(pos)
+        return nonempty
+
+
+    def color(self, color: str):
+        positions = set()
+        for pos in self.fields:
+            if len(self.fields[pos]) == 0:
+                continue
+            if self.fields[pos][-1][0] == color:
+                positions.add(pos)
+        return positions
 
 
 def parse(xml: ElementTree.Element) -> Board:
-    empty = set()
+    fields = {}
     obstructed = set()
-    red = set()
-    blue = set()
     for xmlfields in xml.findall("fields"):
         for xmlfield in xmlfields.findall("field"):
             x = int(xmlfield.get("x"))
             y = int(xmlfield.get("y"))
             if xmlfield.get("isObstructed") == "true":
-                obstructed.add(pos.Pos(x, y))
+                obstructed.add((x, y))
             else:
-                if xmlfield.find("piece") is not None:
-                    pieces = []
-                    owner = None
-                    for xmlpiece in xmlfield:
-                        owner = xmlpiece.get("owner")
-                        pieces.append(xmlpiece.get("type"))
-                    if owner == "RED":
-                        red.add(pos.Pos(x, y, pieces))
-                    else:
-                        blue.add(pos.Pos(x, y, pieces))
-                else:
-                    empty.add(pos.Pos(x, y))
+                pieces = []
+                owner = None
+                for xmlpiece in xmlfield:
+                    pieces.append((xmlpiece.get("owner"), xmlpiece.get("type")))
+                fields[(x, y)] = pieces
     return Board(empty, obstructed, red, blue)

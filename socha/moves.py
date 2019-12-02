@@ -1,4 +1,4 @@
-from . import pos
+from . import gamestate, board
 
 
 class Move:
@@ -6,15 +6,25 @@ class Move:
 
 
 class SetMove(Move):
-    def __init__(self, piece: tuple, dest: pos.Pos):
+    def __init__(self, piece: tuple, dest: tuple):
         self.piece = piece
         self.dest = dest
 
+    def perform(self, gamestate):
+        gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
+        gamestate.turn += 1
+
+        gamestate.undeployed.discard(self.piece)
+        gamestate.board.fields[self.dest].append(self.piece)
+
+        return gamestate
+
     def __xml__(self) -> str:
+        z = (-self.dest[0]) + (-self.dest[1])
         return f"""
         <data class="setmove">
         <piece owner="{self.piece[0]}" type="{self.piece[1]}"/>
-        <destination x="{self.dest.x}" y="{self.dest.y}" z="{self.dest.z}"/>
+        <destination x="{self.dest[0]}" y="{self.dest[1]}" z="{z}"/>
         </data>
         """
 
@@ -23,9 +33,18 @@ class SetMove(Move):
 
 
 class DragMove(Move):
-    def __init__(self, start: pos.Pos, dest: pos.Pos):
+    def __init__(self, start: tuple, dest: tuple):
         self.start = start
         self.dest = dest
+
+    def perform(self, gamestate):
+        gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
+        gamestate.turn += 1
+
+        piece = gamestate.board.fields[self.start].pop()
+        gamestate.board.fields[self.dest].append(piece)
+
+        return gamestate
 
     def __xml__(self) -> str:
         return f"""
@@ -40,6 +59,11 @@ class DragMove(Move):
 
 
 class SkipMove(Move):
+    def perform(self, gamestate):
+        gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
+        gamestate.turn += 1
+        return gamestate
+
     def __xml__(self) -> str:
         return "<data class=\"skipmove\"/>"
 

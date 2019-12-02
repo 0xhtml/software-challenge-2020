@@ -18,9 +18,8 @@ class AlphaBeta:
         best = -math.inf
         possible_moves = gamestate.get_possible_moves()
         for move in possible_moves:
-            # TODO: gamestate.clone
-            # TODO: move.perform
-            value = self.alphaBeta(gamestate, depth - 1)
+            next_gamestate = move.perform(gamestate)
+            value = self.alphaBeta(next_gamestate, depth - 1)
             if value > best:
                 if depth == self.depth:
                     self.bestMove = move
