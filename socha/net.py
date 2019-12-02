@@ -2,7 +2,7 @@ import socket
 import threading
 from xml.etree import ElementTree
 
-from . import gamestate, moves, players, log
+from . import gamestate, moves, players
 
 
 class Client:
@@ -12,7 +12,6 @@ class Client:
 
         self.thread = None
 
-        log.info("Using random player")
         self.player = players.Random()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,7 +22,7 @@ class Client:
         self.socket.send(data.encode())
 
     def send_move(self, move: moves.Move):
-        log.info(f"Send move {move}")
+        print(f"Send move {move}")
         data = f"<room roomId=\"{self.room}\">{move.__xml__()}</room>"
         self.send(data)
 
@@ -46,10 +45,8 @@ class Client:
 
                 try:
                     xml = ElementTree.fromstring(full_data)
-                    log.debug(data[:200])
                     break
                 except ElementTree.ParseError:
-                    log.debug("Stopped receving too early")
                     pass
 
             self.parse(xml)
@@ -72,24 +69,23 @@ class Client:
 
                     self.thread = thread
                 elif tagclass == "error":
-                    log.error(tagdata.get("message"))
+                    self.send("<sc.protocol.responses.CloseConnection />")
+                    self.send("</protocol>")
+                    raise Exception(tagdata.get("message"))
                 else:
-                    log.debug(f"Unknown tag <room class=\"{tagclass}\">")
+                    print(f"Unknown tag <room class=\"{tagclass}\">")
             elif tag.tag == "left":
-                log.debug("<left>")
                 self.send("<sc.protocol.responses.CloseConnection />")
                 self.send("</protocol>")
             elif tag.tag == "sc.protocol.responses.CloseConnection":
-                log.debug("<sc.protocol.responses.CloseConnection>")
                 self.send("</protocol>")
             else:
-                log.debug(f"Unknown tag <{tag.tag}>")
+                print(f"Unknown tag <{tag.tag}>")
 
     def run_bot(self):
         self.send_move(self.player.get(self.gamestate))
 
     def join_any_game(self):
-        log.info("Joining any game")
         self.send("<join gameType=\"swc_2020_hive\"/>")
         try:
             self.recv()
@@ -97,8 +93,8 @@ class Client:
             self.send("<sc.protocol.responses.CloseConnection />")
             self.send("</protocol>")
             self.recv()
-        self.socket.close()
+        finally:
+            self.socket.close()
 
     def join_reservation(self, reservation: str):
-        log.info("Joining reservation")
         pass

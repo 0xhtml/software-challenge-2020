@@ -6,12 +6,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from socha import net
 
 
-def popen(cmd: str, out) -> subprocess.Popen:
+def popen(cmd: str) -> subprocess.Popen:
     p = subprocess.Popen(
         cmd.split(),
         cwd="server",
-        stdout=out,
-        stderr=subprocess.STDOUT
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
     )
     try:
         p.wait(5)
@@ -21,10 +21,10 @@ def popen(cmd: str, out) -> subprocess.Popen:
 
 
 def test_with_server():
-    server = popen("java -jar server.jar", open(os.devnull, "w"))
+    server = popen("java -jar server.jar")
 
     try:
-        player = popen("java -jar defaultplayer.jar", open(os.devnull, "w"))
+        player = popen("java -jar defaultplayer.jar")
 
         try:
             client = net.Client("localhost", 13050)
