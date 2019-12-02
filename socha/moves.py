@@ -14,7 +14,7 @@ class SetMove(Move):
         gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
         gamestate.turn += 1
 
-        gamestate.undeployed.discard(self.piece)
+        gamestate.undeployed.remove(self.piece)
         gamestate.board.fields[self.dest].append(self.piece)
 
         return gamestate

@@ -46,4 +46,4 @@ def parse(xml: ElementTree.Element) -> Board:
                 for xmlpiece in xmlfield:
                     pieces.append((xmlpiece.get("owner"), xmlpiece.get("type")))
                 fields[(x, y)] = pieces
-    return Board(empty, obstructed, red, blue)
+    return Board(fields, obstructed)
