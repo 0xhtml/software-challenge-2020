@@ -12,7 +12,7 @@ class Client:
 
         self.thread = None
 
-        self.player = players.Random()
+        self.player = players.AlphaBeta()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))

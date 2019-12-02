@@ -36,6 +36,13 @@ class GameState:
             fields.difference_update(next)
         return len(fields) == 0
 
+    def get_possible_moves(self) -> set:
+        possible_moves = self.get_possible_set_moves()
+        possible_moves.update(self.get_possible_drag_moves())
+        if len(possible_moves) == 0:
+            possible_moves.add(moves.SkipMove())
+        return possible_moves
+
     def get_possible_set_moves(self) -> set:
         if self.turn == 0:
             dests = self.board.empty
