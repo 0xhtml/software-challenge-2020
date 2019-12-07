@@ -1,5 +1,4 @@
 from xml.etree import ElementTree
-import copy
 
 from . import board, moves
 
@@ -192,8 +191,11 @@ class GameState:
         return dests
 
     def clone(self):
+        fields = {}
+        for key in self.board.fields:
+            fields[key] = self.board.fields[key].copy()
         _board = board.Board(
-            copy.deepcopy(self.board.fields),
+            fields,
             self.board.obstructed.copy()
         )
         return GameState(
