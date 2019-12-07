@@ -49,10 +49,12 @@ class DragMove(Move):
         return gamestate
 
     def __xml__(self) -> str:
+        start_z = (-self.start[0]) + (-self.start[1])
+        dest_z = (-self.dest[0]) + (-self.dest[1])
         return f"""
         <data class="dragmove">
-        <start x="{self.start.x}" y="{self.start.y}" z="{self.start.z}"/>
-        <destination x="{self.dest.x}" y="{self.dest.y}" z="{self.dest.z}"/>
+        <start x="{self.start[0]}" y="{self.start[1]}" z="{start_z}"/>
+        <destination x="{self.dest[0]}" y="{self.dest[1]}" z="{dest_z}"/>
         </data>
         """
 
