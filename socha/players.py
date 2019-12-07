@@ -9,8 +9,10 @@ class Random:
 
 class AlphaBeta:
     def __init__(self):
-        self.depth = 3
+        self.depth = 2
         self.bestMove = None
+        self.color = None
+        self.opp = None
 
     def alphaBeta(self, gamestate: gamestate.GameState, depth: int):
         if (depth <= 0): # TODO: or endOfGame
@@ -28,8 +30,16 @@ class AlphaBeta:
         return best
 
     def evaluate(self, gamestate):
-        return 0
+        value = (
+            -gamestate.pieces_around_bee(self.color)
+            +gamestate.pieces_around_bee(self.opp)
+        )
+        if gamestate.color != self.color:
+            return -value
+        return value
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
+        self.color = gamestate.color
+        self.opp = gamestate.opp
         self.alphaBeta(gamestate, self.depth)
         return self.bestMove

@@ -190,6 +190,15 @@ class GameState:
         dests.intersection_update(self.board.empty())
         return dests
 
+    def pieces_around_bee(self, color: str) -> int:
+        for field in self.board.color(color):
+            for piece in self.board.fields[field]:
+                if piece[1] == "BEE":
+                    neighbours = self.get_neighbours(field)
+                    neighbours.difference_update(self.board.empty())
+                    return len(neighbours)
+        return 10
+
     def clone(self):
         fields = {}
         for key in self.board.fields:
