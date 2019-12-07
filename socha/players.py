@@ -14,7 +14,7 @@ class AlphaBeta:
         self.color = None
         self.opp = None
 
-    def alphaBeta(self, gamestate: gamestate.GameState, depth: int):
+    def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a: int, b: int):
         if (depth <= 0): # TODO: or endOfGame
             return self.evaluate(gamestate)
         best = -math.inf
@@ -22,11 +22,15 @@ class AlphaBeta:
         for move in possible_moves:
             next_gamestate = gamestate.clone()
             next_gamestate = move.perform(next_gamestate)
-            value = self.alphaBeta(next_gamestate, depth - 1)
+            value = -self.alphaBeta(next_gamestate, depth - 1, -b, -a)
             if value > best:
+                if value >= b:
+                    return value
+                best = value
                 if depth == self.depth:
                     self.bestMove = move
-                best = value
+                if value > a:
+                    a = value
         return best
 
     def evaluate(self, gamestate):
@@ -41,5 +45,5 @@ class AlphaBeta:
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.color = gamestate.color
         self.opp = gamestate.opp
-        self.alphaBeta(gamestate, self.depth)
+        self.alphaBeta(gamestate, self.depth, -math.inf, math.inf)
         return self.bestMove
