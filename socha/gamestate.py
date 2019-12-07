@@ -222,7 +222,7 @@ def parse(xml: ElementTree.Element) -> GameState:
     _board = board.parse(xml.find("board"))
 
     undeployed = []
-    for xmlpiece in xml.findall("*/piece"):
-        undeployed.append((xmlpiece.get("owner"), xmlpiece.get("type")))
+    for piece in xml.findall("*/piece"):
+        undeployed.append((piece.get("owner"), piece.get("type")))
 
     return GameState(color, turn, _board, undeployed)

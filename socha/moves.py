@@ -1,6 +1,3 @@
-from . import gamestate, board
-
-
 class Move:
     pass
 

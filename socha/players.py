@@ -14,8 +14,8 @@ class AlphaBeta:
         self.color = None
         self.opp = None
 
-    def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a: int, b: int):
-        if (depth <= 0): # TODO: or endOfGame
+    def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
+        if (depth <= 0):  # TODO: or endOfGame
             return self.evaluate(gamestate)
         best = -math.inf
         possible_moves = gamestate.get_possible_moves()
@@ -36,7 +36,7 @@ class AlphaBeta:
     def evaluate(self, gamestate):
         value = (
             -gamestate.pieces_around_bee(self.color)
-            +gamestate.pieces_around_bee(self.opp)
+            + gamestate.pieces_around_bee(self.opp)
         )
         if gamestate.color != self.color:
             return -value

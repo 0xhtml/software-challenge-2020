@@ -27,7 +27,6 @@ class Board:
         self.cache["nonempty"] = nonempty
         return nonempty.copy()
 
-
     def color(self, color: str):
         if "color" + color in self.cache:
             return self.cache["color" + color].copy()
@@ -44,16 +43,15 @@ class Board:
 def parse(xml: ElementTree.Element) -> Board:
     fields = {}
     obstructed = set()
-    for xmlfields in xml.findall("fields"):
-        for xmlfield in xmlfields.findall("field"):
-            x = int(xmlfield.get("x"))
-            y = int(xmlfield.get("y"))
-            if xmlfield.get("isObstructed") == "true":
+    for fields in xml.findall("fields"):
+        for field in fields.findall("field"):
+            x = int(field.get("x"))
+            y = int(field.get("y"))
+            if field.get("isObstructed") == "true":
                 obstructed.add((x, y))
             else:
                 pieces = []
-                owner = None
-                for xmlpiece in xmlfield:
-                    pieces.append((xmlpiece.get("owner"), xmlpiece.get("type")))
+                for piece in field:
+                    pieces.append((piece.get("owner"), piece.get("type")))
                 fields[(x, y)] = pieces
     return Board(fields, obstructed)
