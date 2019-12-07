@@ -53,7 +53,7 @@ class GameState:
             def f(x):
                 neighbours = self.get_neighbours(x)
                 for neighbour in neighbours:
-                    for oppfield in self.board.color(self.color):
+                    for oppfield in self.board.color(self.opp):
                         if neighbour == oppfield:
                             return False
                 return True
