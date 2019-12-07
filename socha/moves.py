@@ -11,6 +11,7 @@ class SetMove(Move):
         self.dest = dest
 
     def perform(self, gamestate):
+        gamestate.opp = gamestate.color
         gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
         gamestate.turn += 1
 
@@ -38,6 +39,7 @@ class DragMove(Move):
         self.dest = dest
 
     def perform(self, gamestate):
+        gamestate.opp = gamestate.color
         gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
         gamestate.turn += 1
 
@@ -60,6 +62,7 @@ class DragMove(Move):
 
 class SkipMove(Move):
     def perform(self, gamestate):
+        gamestate.opp = gamestate.color
         gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
         gamestate.turn += 1
         return gamestate

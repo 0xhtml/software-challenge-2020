@@ -1,4 +1,5 @@
 from xml.etree import ElementTree
+import copy
 
 from . import board, moves
 
@@ -189,6 +190,18 @@ class GameState:
             dests.add(dest)
         dests.intersection_update(self.board.empty())
         return dests
+
+    def clone(self):
+        _board = board.Board(
+            copy.deepcopy(self.board.fields),
+            self.board.obstructed.copy()
+        )
+        return GameState(
+            self.color,
+            self.turn,
+            _board,
+            self.undeployed.copy()
+        )
 
 
 def parse(xml: ElementTree.Element) -> GameState:
