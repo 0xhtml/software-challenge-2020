@@ -43,15 +43,14 @@ class Board:
 def parse(xml: ElementTree.Element) -> Board:
     fields = {}
     obstructed = set()
-    for fields in xml.findall("fields"):
-        for field in fields.findall("field"):
-            x = int(field.get("x"))
-            y = int(field.get("y"))
-            if field.get("isObstructed") == "true":
-                obstructed.add((x, y))
-            else:
-                pieces = []
-                for piece in field:
-                    pieces.append((piece.get("owner"), piece.get("type")))
-                fields[(x, y)] = pieces
+    for field in xml.findall("fields/field"):
+        x = int(field.get("x"))
+        y = int(field.get("y"))
+        if field.get("isObstructed") == "true":
+            obstructed.add((x, y))
+        else:
+            pieces = []
+            for piece in field:
+                pieces.append((piece.get("owner"), piece.get("type")))
+            fields[(x, y)] = pieces
     return Board(fields, obstructed)

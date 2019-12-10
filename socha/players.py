@@ -1,4 +1,5 @@
 import math
+import time
 from . import gamestate, moves
 
 
@@ -9,7 +10,7 @@ class Random:
 
 class AlphaBeta:
     def __init__(self):
-        self.depth = 2
+        self.depth = 3
         self.bestMove = None
         self.color = None
         self.opp = None
@@ -43,7 +44,10 @@ class AlphaBeta:
         return value
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
+        now = time.time_ns()
         self.color = gamestate.color
         self.opp = gamestate.opp
         self.alphaBeta(gamestate, self.depth, -math.inf, math.inf)
+        then = time.time_ns() - now
+        print(f"Time {round(then/1000000000, 2)} s ({then} ns)")
         return self.bestMove
