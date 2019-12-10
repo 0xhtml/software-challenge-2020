@@ -191,9 +191,9 @@ class GameState:
         return dests
 
     def pieces_around_bee(self, color: str) -> int:
-        for field in self.board.color(color):
+        for field in self.board.fields:
             for piece in self.board.fields[field]:
-                if piece[1] == "BEE":
+                if piece == (color, "BEE"):
                     neighbours = self.get_neighbours(field)
                     neighbours.difference_update(self.board.empty())
                     return len(neighbours)
