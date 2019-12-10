@@ -10,8 +10,8 @@ class Random:
 
 class AlphaBeta:
     def __init__(self):
-        self.depth = 3
-        self.bestMove = None
+        self.depth = 2
+        self.best = (None, None)
         self.color = None
         self.opp = None
 
@@ -29,7 +29,7 @@ class AlphaBeta:
                     return value
                 best = value
                 if depth == self.depth:
-                    self.bestMove = move
+                    self.best = (value, move)
                 if value > a:
                     a = value
         return best
@@ -49,5 +49,6 @@ class AlphaBeta:
         self.opp = gamestate.opp
         self.alphaBeta(gamestate, self.depth, -math.inf, math.inf)
         then = time.time_ns() - now
-        print(f"Time {round(then/1000000000, 2)} s ({then} ns)")
-        return self.bestMove
+        print(f"Time: {round(then/1000000000, 2)} s")
+        print(f"Eval: {self.best[0]}")
+        return self.best[1]
