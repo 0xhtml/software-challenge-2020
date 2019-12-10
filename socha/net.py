@@ -97,4 +97,4 @@ class Client:
             self.socket.close()
 
     def join_reservation(self, reservation: str):
-        pass
+        self.send(f"<joinPrepared reservationCode=\"{reservation}\" />")
