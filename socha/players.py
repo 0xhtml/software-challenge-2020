@@ -9,8 +9,10 @@ class Random:
 
 
 class AlphaBeta:
+    MAX_TIME = 1900000000
+
     def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
-        if (depth <= 0 or time.time_ns() - self.now > 1800000000):  # TODO: or endOfGame
+        if (depth <= 0 or time.time_ns() - self.now > self.MAX_TIME):  # TODO: or endOfGame
             return self.evaluate(gamestate)
         best = -math.inf
         possible_moves = gamestate.get_possible_moves()
@@ -30,9 +32,14 @@ class AlphaBeta:
 
     def IDDFS(self, gamestate: gamestate.GameState):
         self.depth = 0
-        while time.time_ns() - self.now < 1800000000:
+        while time.time_ns() - self.now < self.MAX_TIME:
             self.depth += 1
             self.alphaBeta(gamestate, self.depth, -math.inf, math.inf)
+        if self.best[self.depth][0] > self.best[self.depth-1][0]:
+            print(f"Depth: {self.depth}")
+            return self.best[self.depth]
+        print(f"Depth: {self.depth-1}")
+        return self.best[self.depth-1]
 
     def evaluate(self, gamestate):
         value = (
@@ -50,10 +57,9 @@ class AlphaBeta:
         self.color = gamestate.color
         self.opp = gamestate.opp
 
-        self.IDDFS(gamestate)
+        move = self.IDDFS(gamestate)
 
         then = time.time_ns() - self.now
         print(f"Time: {round(then/1000000000, 2)} s")
-        print(f"Depth: {self.depth}")
-        print(f"Eval: {self.best[self.depth][0]}")
-        return self.best[self.depth][1]
+        print(f"Eval: {move[0]}")
+        return move[1]
