@@ -12,7 +12,7 @@ class AlphaBeta:
     MAX_TIME = 1900000000
 
     def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
-        if (depth <= 0 or time.time_ns() - self.now > self.MAX_TIME):  # TODO: or endOfGame
+        if (depth <= 0 or time.time_ns() - self.now > self.MAX_TIME):
             return self.evaluate(gamestate)
         best = -math.inf
         possible_moves = gamestate.get_possible_moves()
