@@ -35,7 +35,7 @@ class AlphaBeta:
         depth = 0
         values = {}
         self.timeout = False
-        while not self.timeout:
+        while not self.timeout and depth < 20:
             for move in possible_moves:
                 value = self.alphaBeta(
                     move.perform(gamestate.clone()),
