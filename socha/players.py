@@ -57,8 +57,8 @@ class AlphaBeta:
 
     def evaluate(self, gamestate):
         value = (
-            -gamestate.pieces_around_bee(gamestate.color)
-            + gamestate.pieces_around_bee(gamestate.opp)
+            gamestate.pieces_around_bee(gamestate.color)
+            - gamestate.pieces_around_bee(gamestate.opp)
         )
         if isinstance(gamestate.last_move, moves.SkipMove):
             value -= 10
