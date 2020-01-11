@@ -10,6 +10,7 @@ class GameState:
         self.turn = turn
         self.board = board
         self.undeployed = undep
+        self.last_move = None
         self.directions = [
             (1, 0),
             (1, -1),

@@ -60,6 +60,8 @@ class AlphaBeta:
             -gamestate.pieces_around_bee(gamestate.color)
             + gamestate.pieces_around_bee(gamestate.opp)
         )
+        if isinstance(gamestate.last_move, moves.SkipMove):
+            value -= 10
         return value
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
