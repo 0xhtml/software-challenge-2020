@@ -14,7 +14,7 @@ class AlphaBeta:
     def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
         if (time.time_ns() - self.now > self.MAX_TIME):
             self.timeout = True
-        if (depth <= 0 or self.timeout):
+        if (depth <= 0 or gamestate.game_ended() or self.timeout):
             return self.evaluate(gamestate)
         possible_moves = gamestate.get_possible_moves()
         for move in possible_moves:

@@ -200,6 +200,13 @@ class GameState:
                     return len(neighbours)
         return 10
 
+    def game_ended(self):
+        if self.color != "RED":
+            return False
+        return self.pieces_around_bee(self.color) == 6 or \
+            self.pieces_around_bee(self.opp) == 6 or \
+            self.turn >= 60
+
     def clone(self):
         fields = {}
         for key in self.board.fields:
