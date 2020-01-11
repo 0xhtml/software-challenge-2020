@@ -18,12 +18,14 @@ class AlphaBeta:
             return self.evaluate(gamestate)
         possible_moves = gamestate.get_possible_moves()
         for move in possible_moves:
+            move.do(gamestate)
             value = -self.alphaBeta(
-                move.perform(gamestate.clone()),
+                gamestate,
                 depth - 1,
                 -b,
                 -a
             )
+            move.undo(gamestate)
             if value >= b:
                 return b
             if value > a:
@@ -37,12 +39,14 @@ class AlphaBeta:
         self.timeout = False
         while not self.timeout and depth < 20:
             for move in possible_moves:
+                move.do(gamestate)
                 value = self.alphaBeta(
-                    move.perform(gamestate.clone()),
+                    gamestate,
                     depth,
                     -math.inf,
                     math.inf
                 )
+                move.undo(gamestate)
                 if self.timeout:
                     break
                 values[move] = value

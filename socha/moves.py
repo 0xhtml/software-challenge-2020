@@ -1,5 +1,17 @@
 class Move:
-    pass
+    def do(self, gamestate):
+        gamestate.moves.append(self)
+        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
+        gamestate.turn += 1
+        gamestate.board.cache = {}
+        return gamestate
+
+    def undo(self, gamestate):
+        gamestate.moves.pop()
+        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
+        gamestate.turn -= 1
+        gamestate.board.cache = {}
+        return gamestate
 
 
 class SetMove(Move):
@@ -7,16 +19,15 @@ class SetMove(Move):
         self.piece = piece
         self.dest = dest
 
-    def perform(self, gamestate):
-        gamestate.moves.append(self)
-
-        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
-        gamestate.turn += 1
-
+    def do(self, gamestate):
         gamestate.undeployed.remove(self.piece)
         gamestate.board.fields[self.dest].append(self.piece)
+        return super().do(gamestate)
 
-        return gamestate
+    def undo(self, gamestate):
+        gamestate.undeployed.append(self.piece)
+        gamestate.board.fields[self.dest].pop()
+        return super().undo(gamestate)
 
     def __xml__(self) -> str:
         z = (-self.dest[0]) + (-self.dest[1])
@@ -36,16 +47,15 @@ class DragMove(Move):
         self.start = start
         self.dest = dest
 
-    def perform(self, gamestate):
-        gamestate.moves.append(self)
-
-        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
-        gamestate.turn += 1
-
+    def do(self, gamestate):
         piece = gamestate.board.fields[self.start].pop()
         gamestate.board.fields[self.dest].append(piece)
+        return super().do(gamestate)
 
-        return gamestate
+    def undo(self, gamestate):
+        piece = gamestate.board.fields[self.dest].pop()
+        gamestate.board.fields[self.start].append(piece)
+        return super().undo(gamestate)
 
     def __xml__(self) -> str:
         start_z = (-self.start[0]) + (-self.start[1])
@@ -62,13 +72,6 @@ class DragMove(Move):
 
 
 class SkipMove(Move):
-    def perform(self, gamestate):
-        gamestate.moves.append(self)
-
-        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
-        gamestate.turn += 1
-        return gamestate
-
     def __xml__(self) -> str:
         return "<data class=\"skipmove\"/>"
 

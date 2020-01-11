@@ -4,7 +4,7 @@ from . import board, moves
 
 
 class GameState:
-    def __init__(self, c: str, t: int, b: board.Board, undep: set, m: list):
+    def __init__(self, c: str, t: int, b: board.Board, undep: list, m: list):
         self.color = c
         self.opp = "BLUE" if c == "RED" else "RED"
         self.turn = t
@@ -209,22 +209,6 @@ class GameState:
         return self.around_bee(self.color).difference(empty) == 6 or \
             self.around_bee(self.opp).difference(empty) == 6 or \
             self.turn >= 60
-
-    def clone(self):
-        fields = {}
-        for key in self.board.fields:
-            fields[key] = self.board.fields[key].copy()
-        _board = board.Board(
-            fields,
-            self.board.obstructed.copy()
-        )
-        return GameState(
-            self.color,
-            self.turn,
-            _board,
-            self.undeployed.copy(),
-            self.moves.copy()
-        )
 
 
 def parse(xml: ElementTree.Element) -> GameState:
