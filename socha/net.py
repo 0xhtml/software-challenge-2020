@@ -72,6 +72,13 @@ class Client:
                     self.send("<sc.protocol.responses.CloseConnection />")
                     self.send("</protocol>")
                     raise Exception(tagdata.get("message"))
+                elif tagclass == "result":
+                    winner = tagdata.find("winner").get("color")
+                    print(f"{winner} won the game!")
+                    reason = set()
+                    for score in tagdata.findall("score"):
+                        reason.add(score.get("reason"))
+                    print("\n".join(reason))
                 else:
                     print(f"Unknown tag <room class=\"{tagclass}\">")
             elif tag.tag == "left":
