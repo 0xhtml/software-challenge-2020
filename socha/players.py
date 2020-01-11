@@ -2,6 +2,8 @@ import math
 import time
 from . import gamestate, moves
 
+MAX_TIME = 1900000000
+
 
 class Random:
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
@@ -9,10 +11,8 @@ class Random:
 
 
 class AlphaBeta:
-    MAX_TIME = 1900000000
-
     def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
-        if (time.time_ns() - self.now > self.MAX_TIME):
+        if (time.time_ns() - self.now > MAX_TIME):
             self.timeout = True
         if (depth <= 0 or gamestate.game_ended() or self.timeout):
             return self.evaluate(gamestate)
