@@ -2,5 +2,4 @@ env/
 .vscode/
 __pycache__/
 server/
-*.log
-.pytest_cache/
+socha.zip
