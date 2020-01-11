@@ -79,7 +79,8 @@ class GameState:
 
         for pos in self.board.color(self.color):
             fields = self.board.nonempty()
-            fields.discard(pos)
+            if len(self.board.fields[pos]) == 1:
+                fields.discard(pos)
             if not self.is_connected(fields):
                 continue
 
