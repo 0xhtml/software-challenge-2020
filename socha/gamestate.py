@@ -4,13 +4,13 @@ from . import board, moves
 
 
 class GameState:
-    def __init__(self, color: str, turn: int, board: board.Board, undep: set):
-        self.color = color
-        self.opp = "BLUE" if color == "RED" else "RED"
-        self.turn = turn
-        self.board = board
+    def __init__(self, c: str, t: int, b: board.Board, undep: set, m: list):
+        self.color = c
+        self.opp = "BLUE" if c == "RED" else "RED"
+        self.turn = t
+        self.board = b
         self.undeployed = undep
-        self.last_move = None
+        self.moves = m
         self.directions = [
             (1, 0),
             (1, -1),
@@ -102,11 +102,12 @@ class GameState:
 
     def get_beetle_move_dests(self, pos: tuple, start_pos: tuple) -> set:
         fields = self.board.nonempty()
-        fields.discard(start_pos)
+        if len(self.board.fields[start_pos]) == 1:
+            fields.discard(start_pos)
 
         dests = {y for x in fields for y in self.get_neighbours(x)}
         dests.intersection_update(self.board.empty())
-        dests.update(self.board.nonempty())
+        dests.update(fields)
         dests.intersection_update(self.get_neighbours(pos))
 
         for i in range(6):
@@ -130,7 +131,8 @@ class GameState:
         dests = self.get_beetle_move_dests(pos, start_pos)
         dests.intersection_update(self.board.empty())
         fields = self.board.nonempty()
-        fields.discard(start_pos)
+        if len(self.board.fields[start_pos]) == 1:
+            fields.discard(start_pos)
         fields.update(self.board.obstructed)
         for i in range(6):
             a = (
@@ -191,20 +193,20 @@ class GameState:
         dests.intersection_update(self.board.empty())
         return dests
 
-    def pieces_around_bee(self, color: str) -> int:
+    def around_bee(self, color: str) -> set:
         for field in self.board.fields:
             for piece in self.board.fields[field]:
                 if piece == (color, "BEE"):
                     neighbours = self.get_neighbours(field)
-                    neighbours.difference_update(self.board.empty())
-                    return len(neighbours)
-        return 10
+                    return neighbours
+        return set()
 
     def game_ended(self):
         if self.color != "RED":
             return False
-        return self.pieces_around_bee(self.color) == 6 or \
-            self.pieces_around_bee(self.opp) == 6 or \
+        empty = self.board.empty()
+        return self.around_bee(self.color).difference(empty) == 6 or \
+            self.around_bee(self.opp).difference(empty) == 6 or \
             self.turn >= 60
 
     def clone(self):
@@ -219,7 +221,8 @@ class GameState:
             self.color,
             self.turn,
             _board,
-            self.undeployed.copy()
+            self.undeployed.copy(),
+            self.moves.copy()
         )
 
 
@@ -233,4 +236,4 @@ def parse(xml: ElementTree.Element) -> GameState:
     for piece in xml.findall("*/piece"):
         undeployed.append((piece.get("owner"), piece.get("type")))
 
-    return GameState(color, turn, _board, undeployed)
+    return GameState(color, turn, _board, undeployed, [])

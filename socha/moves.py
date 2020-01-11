@@ -8,10 +8,9 @@ class SetMove(Move):
         self.dest = dest
 
     def perform(self, gamestate):
-        gamestate.last_move = self
+        gamestate.moves.append(self)
 
-        gamestate.opp = gamestate.color
-        gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
+        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
         gamestate.turn += 1
 
         gamestate.undeployed.remove(self.piece)
@@ -38,10 +37,9 @@ class DragMove(Move):
         self.dest = dest
 
     def perform(self, gamestate):
-        gamestate.last_move = self
+        gamestate.moves.append(self)
 
-        gamestate.opp = gamestate.color
-        gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
+        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
         gamestate.turn += 1
 
         piece = gamestate.board.fields[self.start].pop()
@@ -65,10 +63,9 @@ class DragMove(Move):
 
 class SkipMove(Move):
     def perform(self, gamestate):
-        gamestate.last_move = self
+        gamestate.moves.append(self)
 
-        gamestate.opp = gamestate.color
-        gamestate.color = "BLUE" if gamestate.color == "RED" else "RED"
+        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
         gamestate.turn += 1
         return gamestate
 

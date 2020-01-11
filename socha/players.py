@@ -52,17 +52,32 @@ class AlphaBeta:
                 reverse=True
             )
             depth += 1
-        print("d", depth, "e", values[possible_moves[0]], end=" ")
+        print("d", depth, "e", values.get(possible_moves[0]), end=" ")
         return possible_moves[0]
 
-    def evaluate(self, gamestate):
+    def evaluate(self, gamestate: gamestate.GameState):
+        own = gamestate.around_bee(gamestate.color)
+        opp = gamestate.around_bee(gamestate.opp)
+        empty = gamestate.board.empty()
+
         value = (
-            gamestate.pieces_around_bee(gamestate.color)
-            - gamestate.pieces_around_bee(gamestate.opp)
+            (len(opp.difference(empty)) or 10)
+            - (len(own.difference(empty)) or 10)
         )
-        if isinstance(gamestate.last_move, moves.SkipMove):
-            value -= 10
-        return value
+
+        if len(own.difference(empty)) == 6:
+            value -= 200
+        if len(opp.difference(empty)) == 6:
+            value += 200
+
+        for i, move in enumerate(reversed(gamestate.moves)):
+            if isinstance(move, moves.SkipMove):
+                if i % 2 == 0:
+                    value += 1000
+                else:
+                    value -= 1000
+
+        return -value
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.time_ns()
