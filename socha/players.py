@@ -11,12 +11,25 @@ class Random:
 
 
 class AlphaBeta:
+    transpositions = {}
+
     def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
+        boardhash = hash(gamestate.board)
+        if boardhash in self.transpositions:
+            transposition = self.transpositions[boardhash]
+            if transposition[0] >= depth and \
+                    transposition[1][0] >= a and \
+                    transposition[1][1] <= b and \
+                    transposition[2] == gamestate.color:
+                return transposition[3]
+
         if (time.time_ns() - self.now > MAX_TIME):
             self.timeout = True
         if (depth <= 0 or gamestate.game_ended() or self.timeout):
             return self.evaluate(gamestate)
+
         possible_moves = gamestate.get_possible_moves()
+        window = (a, b)
         for move in possible_moves:
             move.do(gamestate)
             value = -self.alphaBeta(
@@ -30,6 +43,10 @@ class AlphaBeta:
                 return b
             if value > a:
                 a = value
+
+        self.transpositions[boardhash] = (
+            depth, window, gamestate.color, a
+        )
         return a
 
     def IDDFS(self, gamestate: gamestate.GameState):
@@ -38,6 +55,8 @@ class AlphaBeta:
         values = {}
         self.timeout = False
         while not self.timeout and depth < 20:
+            if depth + gamestate.turn >= 60:
+                self.transpositions.clear()
             for move in possible_moves:
                 move.do(gamestate)
                 value = self.alphaBeta(

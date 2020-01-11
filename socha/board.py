@@ -40,9 +40,7 @@ class Board:
         return positions.copy()
 
     def __hash__(self):
-        fields = hash(frozenset((x, *self.fields[x]) for x in self.nonempty()))
-        obstructed = hash(frozenset(self.obstructed))
-        return fields ^ obstructed
+        return hash(frozenset((x, *self.fields[x]) for x in self.nonempty()))
 
 
 def parse(xml: ElementTree.Element) -> Board:
