@@ -17,11 +17,20 @@ class AlphaBeta:
         boardhash = hash(gamestate.board)
         if boardhash in self.transpositions:
             transposition = self.transpositions[boardhash]
-            if transposition[0] >= depth and \
-                    transposition[1][0] >= a and \
-                    transposition[1][1] <= b and \
-                    transposition[2] == gamestate.color:
-                return transposition[3]
+            if (
+                transposition[0] >= depth and
+                transposition[1][0] >= a and
+                transposition[1][1] <= b and
+                transposition[2] == gamestate.color and
+                (
+                    gamestate.turn > 1 or
+                    transposition[3] == gamestate.turn
+                ) and (
+                    gamestate.turn + depth < 60 or
+                    transposition[3] == gamestate.turn
+                )
+            ):
+                return transposition[4]
 
         if (time.time_ns() - self.now > MAX_TIME):
             self.timeout = True
@@ -45,7 +54,7 @@ class AlphaBeta:
                 a = value
 
         self.transpositions[boardhash] = (
-            depth, window, gamestate.color, a
+            depth, window, gamestate.color, gamestate.turn, a
         )
         return a
 
@@ -55,8 +64,6 @@ class AlphaBeta:
         values = {}
         self.timeout = False
         while not self.timeout and depth < 20:
-            if depth + gamestate.turn >= 60:
-                self.transpositions.clear()
             for move in possible_moves:
                 move.do(gamestate)
                 value = self.alphaBeta(
