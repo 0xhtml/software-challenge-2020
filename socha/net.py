@@ -73,8 +73,11 @@ class Client:
                     self.send("</protocol>")
                     raise Exception(tagdata.get("message"))
                 elif tagclass == "result":
-                    winner = tagdata.find("winner").get("color")
-                    print(f"{winner} won the game!")
+                    tagwinner = tagdata.find("winner")
+                    if tagwinner is None:
+                        print("No body won the game!")
+                    else:
+                        print(f"{tagwinner.get('color')} won the game!")
                     reason = set()
                     for score in tagdata.findall("score"):
                         reason.add(score.get("reason"))
