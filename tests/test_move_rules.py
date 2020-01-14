@@ -16,11 +16,11 @@ def drag(fields: dict, dests: set, obs=set()):
             if (x, y) not in fields:
                 fields[(x, y)] = []
             else:
-                fields[(x, y)] = [("RED", fields[(x, y)][0])]
+                fields[(x, y)] = [("RED", x) for x in fields[(x, y)]]
 
     _board = board.Board(fields, obs)
-    _gamestate = gamestate.GameState("RED", 10, _board, set())
-    possible_moves = _gamestate.get_possible_drag_moves()
+    _gamestate = gamestate.GameState("RED", 10, _board, set(), [])
+    possible_moves = _gamestate.get_possible_moves()
 
     for move in possible_moves:
         if move.start == (0, 0) and move.dest not in dests:
@@ -116,6 +116,26 @@ def test_beetle_move():
         }
     )
 
+def test_beetle2_move():
+    drag(
+        {
+            (1, 0): ["BEE"],
+            (0, 1): ["SPIDER"],
+            (0, 0): ["ANT", "BEETLE"],
+            (-1, 1): ["SPIDER"],
+            (-2, 0): ["BEE"],
+            (-2, 1): ["ANT"]
+        },
+        {
+            (1, 0),
+            (1, -1),
+            (0, 1),
+            (-1, 0),
+            (-1, 1)
+        }
+    )
+
+
 def test_grasshopper_move():
     drag(
         {
@@ -136,6 +156,18 @@ def test_grasshopper_move():
             (-2, 0),
             (0, -3),
             (4, 0)
+        }
+    )
+
+def test_grasshopper2_move():
+    drag(
+        {
+            (-2, 0): ["BEE"],
+            (-1, 0): ["BEE"],
+            (0, 0): ["GRASSHOPPER"]
+        },
+        {
+            (-3, 0)
         }
     )
 
@@ -202,4 +234,14 @@ def test_ant_move():
         {
             (0, -2)
         }
+    )
+
+def test_skip_move():
+    drag(
+        {
+            (0, 0): ["BEE"],
+            (-1, 0): ["BEE"],
+            (1, 0): ["BEE"]
+        },
+        set()
     )
