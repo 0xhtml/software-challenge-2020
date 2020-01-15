@@ -22,7 +22,12 @@ class AlphaBeta:
                 transposition[1][0] >= a and
                 transposition[1][1] <= b and
                 transposition[2] == gamestate.color and
-                transposition[3] == gamestate.turn
+                (
+                    (
+                        gamestate.turn > 5 and
+                        gamestate.turn + transposition[0] < 60
+                    ) or transposition[3] == gamestate.turn
+                )
             ):
                 self.counter += 1
                 return transposition[4]
