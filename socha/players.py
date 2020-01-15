@@ -14,34 +14,27 @@ class AlphaBeta:
     transpositions = {}
 
     def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
-        # boardhash = gamestate.board.hash()
-        transposition = None
-        # if boardhash in self.transpositions:
-        #     transposition = self.transpositions[boardhash]
-        #     if (
-        #         transposition[0] >= depth and
-        #         transposition[1][0] >= a and
-        #         transposition[1][1] <= b and
-        #         transposition[2] == gamestate.color and
-        #         transposition[3] == gamestate.turn
-        #     ):
-        #         return transposition[4]
+        boardhash = hash(gamestate.board)
+        if boardhash in self.transpositions:
+            transposition = self.transpositions[boardhash]
+            if (
+                transposition[0] >= depth and
+                transposition[1][0] >= a and
+                transposition[1][1] <= b and
+                transposition[2] == gamestate.color and
+                transposition[3] == gamestate.turn
+            ):
+                self.counter += 1
+                return transposition[4]
 
         if (time.time_ns() - self.now > MAX_TIME):
             self.timeout = True
         if (depth <= 0 or gamestate.game_ended() or self.timeout):
             return self.evaluate(gamestate)
 
-        if (
-            transposition is not None and
-            transposition[2] == gamestate.color and
-            transposition[3] == gamestate.turn
-        ):
-            possible_moves = transposition[5]
-        else:
-            possible_moves = gamestate.get_possible_moves()
+        possible_moves = gamestate.get_possible_moves()
 
-        # window = (a, b)
+        window = (a, b)
         for move in possible_moves:
             move.do(gamestate)
             value = -self.alphaBeta(
@@ -56,16 +49,16 @@ class AlphaBeta:
             if value > a:
                 a = value
 
-        # if transposition is None:
-        #     self.transpositions[boardhash] = (
-        #         depth, window, gamestate.color, gamestate.turn, a, possible_moves
-        #     )
+        self.transpositions[boardhash] = (
+            depth, window, gamestate.color, gamestate.turn, a
+        )
         return a
 
     def IDDFS(self, gamestate: gamestate.GameState):
         possible_moves = gamestate.get_possible_moves()
         depth = 0
         values = {}
+        self.counter = 0
         self.timeout = False
         while not self.timeout and depth < 20:
             for move in possible_moves:
@@ -86,6 +79,7 @@ class AlphaBeta:
                 reverse=True
             )
             depth += 1
+            print(self.counter)
         print("d", depth, "e", values.get(possible_moves[0]), end=" ")
         return possible_moves[0]
 
