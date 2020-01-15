@@ -1,39 +1,59 @@
 from xml.etree import ElementTree
 
-from . import pos
-
 
 class Board:
-    def __init__(self, empty: set, obstructed: set, red: set, blue: set):
-        self.empty = empty
+    def __init__(self, fields: dict, obstructed: set):
+        self.fields = fields
         self.obstructed = obstructed
-        self.red = red
-        self.blue = blue
-        self.both_fields = red.union(blue)
+        self.cache = {}
+
+    def empty(self):
+        if "empty" in self.cache:
+            return self.cache["empty"].copy()
+        empty = set()
+        for pos in self.fields:
+            if len(self.fields[pos]) == 0:
+                empty.add(pos)
+        self.cache["empty"] = empty
+        return empty.copy()
+
+    def nonempty(self):
+        if "nonempty" in self.cache:
+            return self.cache["nonempty"].copy()
+        nonempty = set()
+        for pos in self.fields:
+            if len(self.fields[pos]) > 0:
+                nonempty.add(pos)
+        self.cache["nonempty"] = nonempty
+        return nonempty.copy()
+
+    def color(self, color: str):
+        if "color" + color in self.cache:
+            return self.cache["color" + color].copy()
+        positions = set()
+        for pos in self.fields:
+            if len(self.fields[pos]) == 0:
+                continue
+            if self.fields[pos][-1][0] == color:
+                positions.add(pos)
+        self.cache["color" + color] = positions
+        return positions.copy()
+
+    def __hash__(self):
+        return hash(frozenset((x, *self.fields[x]) for x in self.nonempty()))
 
 
 def parse(xml: ElementTree.Element) -> Board:
-    empty = set()
+    fields = {}
     obstructed = set()
-    red = set()
-    blue = set()
-    for xmlfields in xml.findall("fields"):
-        for xmlfield in xmlfields.findall("field"):
-            x = int(xmlfield.get("x"))
-            y = int(xmlfield.get("y"))
-            if xmlfield.get("isObstructed") == "true":
-                obstructed.add(pos.Pos(x, y))
-            else:
-                if xmlfield.find("piece") is not None:
-                    pieces = []
-                    owner = None
-                    for xmlpiece in xmlfield:
-                        owner = xmlpiece.get("owner")
-                        pieces.append(xmlpiece.get("type"))
-                    if owner == "RED":
-                        red.add(pos.Pos(x, y, pieces))
-                    else:
-                        blue.add(pos.Pos(x, y, pieces))
-                else:
-                    empty.add(pos.Pos(x, y))
-    return Board(empty, obstructed, red, blue)
+    for field in xml.findall("fields/field"):
+        x = int(field.get("x"))
+        y = int(field.get("y"))
+        if field.get("isObstructed") == "true":
+            obstructed.add((x, y))
+        else:
+            pieces = []
+            for piece in field:
+                pieces.append((piece.get("owner"), piece.get("type")))
+            fields[(x, y)] = pieces
+    return Board(fields, obstructed)

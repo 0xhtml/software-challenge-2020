@@ -1,20 +1,40 @@
-from . import pos
-
-
 class Move:
-    pass
+    def do(self, gamestate):
+        gamestate.moves.append(self)
+        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
+        gamestate.turn += 1
+        gamestate.board.cache = {}
+        return gamestate
+
+    def undo(self, gamestate):
+        gamestate.moves.pop()
+        gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
+        gamestate.turn -= 1
+        gamestate.board.cache = {}
+        return gamestate
 
 
 class SetMove(Move):
-    def __init__(self, piece: tuple, dest: pos.Pos):
+    def __init__(self, piece: tuple, dest: tuple):
         self.piece = piece
         self.dest = dest
 
+    def do(self, gamestate):
+        gamestate.undeployed.remove(self.piece)
+        gamestate.board.fields[self.dest].append(self.piece)
+        return super().do(gamestate)
+
+    def undo(self, gamestate):
+        gamestate.undeployed.append(self.piece)
+        gamestate.board.fields[self.dest].pop()
+        return super().undo(gamestate)
+
     def __xml__(self) -> str:
+        z = (-self.dest[0]) + (-self.dest[1])
         return f"""
         <data class="setmove">
         <piece owner="{self.piece[0]}" type="{self.piece[1]}"/>
-        <destination x="{self.dest.x}" y="{self.dest.y}" z="{self.dest.z}"/>
+        <destination x="{self.dest[0]}" y="{self.dest[1]}" z="{z}"/>
         </data>
         """
 
@@ -23,15 +43,27 @@ class SetMove(Move):
 
 
 class DragMove(Move):
-    def __init__(self, start: pos.Pos, dest: pos.Pos):
+    def __init__(self, start: tuple, dest: tuple):
         self.start = start
         self.dest = dest
 
+    def do(self, gamestate):
+        piece = gamestate.board.fields[self.start].pop()
+        gamestate.board.fields[self.dest].append(piece)
+        return super().do(gamestate)
+
+    def undo(self, gamestate):
+        piece = gamestate.board.fields[self.dest].pop()
+        gamestate.board.fields[self.start].append(piece)
+        return super().undo(gamestate)
+
     def __xml__(self) -> str:
+        start_z = (-self.start[0]) + (-self.start[1])
+        dest_z = (-self.dest[0]) + (-self.dest[1])
         return f"""
         <data class="dragmove">
-        <start x="{self.start.x}" y="{self.start.y}" z="{self.start.z}"/>
-        <destination x="{self.dest.x}" y="{self.dest.y}" z="{self.dest.z}"/>
+        <start x="{self.start[0]}" y="{self.start[1]}" z="{start_z}"/>
+        <destination x="{self.dest[0]}" y="{self.dest[1]}" z="{dest_z}"/>
         </data>
         """
 

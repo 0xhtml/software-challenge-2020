@@ -12,7 +12,7 @@ class Client:
 
         self.thread = None
 
-        self.player = players.Random()
+        self.player = players.AlphaBeta()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
@@ -72,6 +72,16 @@ class Client:
                     self.send("<sc.protocol.responses.CloseConnection />")
                     self.send("</protocol>")
                     raise Exception(tagdata.get("message"))
+                elif tagclass == "result":
+                    tagwinner = tagdata.find("winner")
+                    if tagwinner is None:
+                        print("No body won the game!")
+                    else:
+                        print(f"{tagwinner.get('color')} won the game!")
+                    reason = set()
+                    for score in tagdata.findall("score"):
+                        reason.add(score.get("reason"))
+                    print("\n".join(reason))
                 else:
                     print(f"Unknown tag <room class=\"{tagclass}\">")
             elif tag.tag == "left":
@@ -97,4 +107,4 @@ class Client:
             self.socket.close()
 
     def join_reservation(self, reservation: str):
-        pass
+        self.send(f"<joinPrepared reservationCode=\"{reservation}\" />")
