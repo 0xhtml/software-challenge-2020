@@ -31,6 +31,8 @@ build: clean
 	python -c "import socha; from socha import __main__"
 	mkdir -p build/socha
 	cp socha/__pycache__/*.pyc build/socha
-	echo "python -m socha" > build/run.sh
-	zip -r socha.zip build/*
+	for x in build/socha/*;do mv $$x $${x%.cpython-37.pyc}.pyc;done
+	echo "#!/bin/sh\npython -m socha \"\$$@\"" > build/run.sh
+	echo "python -m socha %*" > build/run.bat
+	cd build; zip -r ../socha.zip *
 	rm -r build
