@@ -78,11 +78,11 @@ class GameState:
         possible_moves = set()
 
         for pos in self.board.color(self.color):
-            fields = self.board.nonempty()
             if len(self.board.fields[pos]) == 1:
+                fields = self.board.nonempty()
                 fields.discard(pos)
-            if not self.is_connected(fields):
-                continue
+                if not self.is_connected(fields):
+                    continue
 
             if self.board.fields[pos][-1][1] == "BEETLE":
                 dests = self.get_beetle_move_dests(pos)
