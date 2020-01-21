@@ -39,32 +39,53 @@ class GameState:
         return possible_moves
 
     def get_possible_set_moves(self) -> set:
+        # First turn
         if self.turn == 0:
+            # All empty fields are possible
             dests = self.board.empty()
+
+        # Second turn
         elif self.turn == 1:
+            # Get first set piece
             field = self.board.color(self.opp).pop()
+
+            # Get neighbours of piece
             dests = set(self.get_neighbours(field))
+
+            # Only empty fields
             dests.intersection_update(self.board.empty())
+
+        # All other turns
         else:
+            # Get own pieces
             dests = self.board.color(self.color)
+
+            # Get neighbours of own pieces
             dests = {y for x in dests for y in self.get_neighbours(x)}
+
+            # Only empty fields
             dests.intersection_update(self.board.empty())
 
-            def f(x):
-                neighbours = self.get_neighbours(x)
-                for neighbour in neighbours:
-                    for oppfield in self.board.color(self.opp):
-                        if neighbour == oppfield:
-                            return False
-                return True
-            dests = filter(f, dests)
+            # Get opponent pieces
+            opp = self.board.color(self.opp)
 
+            # Get neighbours of opponent pieces
+            opp = (y for x in opp for y in self.get_neighbours(x))
+
+            # Only fields not next to opponent pieces
+            dests.difference_update(opp)
+
+        # When bee isn't set until fith turn player has to set bee
         if (self.turn > 5 and (self.color, "BEE") in self.undeployed):
             types = {"BEE"}
         else:
+            # Get own undeployed pieces
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
-            types = (x[1] for x in undeployed)
 
+            # Convert pieces to types
+            types = {x[1] for x in undeployed}
+
+        # Return all combinations of pieces and destinations
         return {
             moves.SetMove((self.color, y), x)
             for x in dests
