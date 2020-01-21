@@ -162,19 +162,16 @@ class GameState:
         return dests
 
     def get_ant_move_dests(self, pos: tuple) -> set:
-        dests = {pos}
-        while True:
-            ndests = {
-                y
-                for x in dests
-                for y in self.get_bee_move_dests(x, pos)
-            }
-            count = len(dests)
-            dests.update(ndests)
-            if len(dests) == count:
-                break
-        dests.discard(pos)
-        return dests
+        found = set()
+        todo = {pos}
+        while len(todo) > 0:
+            dest = todo.pop()
+            found.add(dest)
+            dests = self.get_bee_move_dests(dest, pos)
+            dests.difference_update(found)
+            todo.update(dests)
+        found.discard(pos)
+        return found
 
     def get_grasshopper_move_dests(self, pos: tuple) -> set:
         dests = set()
@@ -184,8 +181,6 @@ class GameState:
                 continue
             while dest in self.board.nonempty():
                 dest = (dest[0] + direction[0], dest[1] + direction[1])
-                if dest in self.board.obstructed:
-                    break
             dests.add(dest)
         dests.intersection_update(self.board.empty())
         return dests
