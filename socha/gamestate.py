@@ -93,18 +93,27 @@ class GameState:
         }
 
     def get_possible_drag_moves(self) -> set:
+        # Drag moves are only possible when bee is set
         if (self.color, "BEE") in self.undeployed:
             return set()
 
         possible_moves = set()
 
+        # Loop through all set pieces
         for pos in self.board.color(self.color):
+            # When there is no piece under piece
             if len(self.board.fields[pos]) == 1:
+                # Get all set pieces
                 fields = self.board.nonempty()
+
+                # Remove piece that is being dragged
                 fields.discard(pos)
+
+                # Skip if dragging pieces results in disconnection
                 if not self.is_connected(fields):
                     continue
 
+            # Call function to get piece type specific destinations
             if self.board.fields[pos][-1][1] == "BEETLE":
                 dests = self.get_beetle_move_dests(pos)
             elif self.board.fields[pos][-1][1] == "BEE":
@@ -118,8 +127,10 @@ class GameState:
             else:
                 continue
 
+            # Add all destinations to possible_moves
             possible_moves.update(moves.DragMove(pos, x) for x in dests)
 
+        # Return possible moves
         return possible_moves
 
     def get_beetle_move_dests(self, pos: tuple) -> set:
