@@ -20,8 +20,8 @@ class GameState:
             (0, 1)
         ]
 
-    def get_neighbours(self, pos: tuple) -> set:
-        return {(pos[0] + x[0], pos[1] + x[1]) for x in self.directions}
+    def get_neighbours(self, pos: tuple):
+        return ((pos[0] + x[0], pos[1] + x[1]) for x in self.directions)
 
     def is_connected(self, fields: set) -> bool:
         next = {fields.pop()}
@@ -43,12 +43,12 @@ class GameState:
             dests = self.board.empty()
         elif self.turn == 1:
             field = self.board.color(self.opp).pop()
-            dests = self.get_neighbours(field)
-            dests = dests.intersection(self.board.empty())
+            dests = set(self.get_neighbours(field))
+            dests.intersection_update(self.board.empty())
         else:
             dests = self.board.color(self.color)
             dests = {y for x in dests for y in self.get_neighbours(x)}
-            dests = dests.intersection(self.board.empty())
+            dests.intersection_update(self.board.empty())
 
             def f(x):
                 neighbours = self.get_neighbours(x)
@@ -63,7 +63,7 @@ class GameState:
             types = {"BEE"}
         else:
             undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
-            types = {x[1] for x in undeployed}
+            types = (x[1] for x in undeployed)
 
         return {
             moves.SetMove((self.color, y), x)
@@ -85,7 +85,7 @@ class GameState:
                 continue
 
             if self.board.fields[pos][-1][1] == "BEETLE":
-                dests = self.get_beetle_move_dests(pos, pos)
+                dests = self.get_beetle_move_dests(pos)
             elif self.board.fields[pos][-1][1] == "BEE":
                 dests = self.get_bee_move_dests(pos, pos)
             elif self.board.fields[pos][-1][1] == "SPIDER":
@@ -95,61 +95,57 @@ class GameState:
             elif self.board.fields[pos][-1][1] == "GRASSHOPPER":
                 dests = self.get_grasshopper_move_dests(pos)
             else:
-                dests = set()
+                continue
 
             possible_moves.update(moves.DragMove(pos, x) for x in dests)
 
         return possible_moves
 
-    def get_beetle_move_dests(self, pos: tuple, start_pos: tuple) -> set:
-        fields = self.board.nonempty()
-        if len(self.board.fields[start_pos]) == 1:
-            fields.discard(start_pos)
+    def get_beetle_move_dests(self, pos: tuple) -> set:
+        # Get neighbours of pos
+        neighbours = set(self.get_neighbours(pos))
 
-        dests = {y for x in fields for y in self.get_neighbours(x)}
-        dests.intersection_update(self.board.empty())
-        dests.update(fields)
+        # If we are on top of another piece add it aswell
+        if len(self.board.fields[pos]) > 1:
+            neighbours.add(pos)
+
+        # Only take fields with pieces
+        neighbours.intersection_update(self.board.nonempty())
+
+        # Get fields next to fields
+        dests = {y for x in neighbours for y in self.get_neighbours(x)}
+
+        # Only take fields in reach
         dests.intersection_update(self.get_neighbours(pos))
 
-        for i in range(6):
-            a = (
-                pos[0] + self.directions[i][0],
-                pos[1] + self.directions[i][1]
-            )
-            b = (
-                pos[0] + self.directions[(i + 1) % 6][0],
-                pos[1] + self.directions[(i + 1) % 6][1]
-            )
-            c = (
-                pos[0] + self.directions[(i + 2) % 6][0],
-                pos[1] + self.directions[(i + 2) % 6][1]
-            )
-            if a not in fields and c not in fields:
-                dests.discard(b)
+        # Only take valid fields
+        dests.intersection_update(self.board.fields.keys())
+
+        # Return fields
         return dests
 
     def get_bee_move_dests(self, pos: tuple, start_pos: tuple) -> set:
-        dests = self.get_beetle_move_dests(pos, start_pos)
+        # Get neighbours of pos
+        neighbours = set(self.get_neighbours(pos))
+
+        # Only take fields with pieces
+        neighbours.intersection_update(self.board.nonempty())
+
+        # Remove own field
+        neighbours.discard(start_pos)
+
+        # Get fields next to fields
+        dests = set()
+        for neighbour in neighbours:
+            dests.symmetric_difference_update(self.get_neighbours(neighbour))
+
+        # Only take fields in reach
+        dests.intersection_update(self.get_neighbours(pos))
+
+        # Only take empty fields
         dests.intersection_update(self.board.empty())
-        fields = self.board.nonempty()
-        if len(self.board.fields[start_pos]) == 1:
-            fields.discard(start_pos)
-        fields.update(self.board.obstructed)
-        for i in range(6):
-            a = (
-                pos[0] + self.directions[i][0],
-                pos[1] + self.directions[i][1]
-            )
-            b = (
-                pos[0] + self.directions[(i + 1) % 6][0],
-                pos[1] + self.directions[(i + 1) % 6][1]
-            )
-            c = (
-                pos[0] + self.directions[(i + 2) % 6][0],
-                pos[1] + self.directions[(i + 2) % 6][1]
-            )
-            if a in fields and c in fields:
-                dests.discard(b)
+
+        # Return fields
         return dests
 
     def get_spider_move_dests(self, pos: tuple) -> set:
@@ -198,8 +194,7 @@ class GameState:
         for field in self.board.fields:
             for piece in self.board.fields[field]:
                 if piece == (color, "BEE"):
-                    neighbours = self.get_neighbours(field)
-                    return neighbours
+                    return set(self.get_neighbours(field))
         return set()
 
     def game_ended(self):
