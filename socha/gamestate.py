@@ -139,6 +139,18 @@ class GameState:
         for neighbour in neighbours:
             dests.symmetric_difference_update(self.get_neighbours(neighbour))
 
+        # Get obstructed fields
+        obstructed = self.board.obstructed.copy()
+
+        # Only take obstructed fields in reach
+        obstructed.intersection_update(self.get_neighbours(pos))
+
+        # Get fields next to obscructed fields
+        obstructed = (y for x in obstructed for y in self.get_neighbours(x))
+
+        # Remove fields next to obstructed
+        dests.difference_update(obstructed)
+
         # Only take fields in reach
         dests.intersection_update(self.get_neighbours(pos))
 
