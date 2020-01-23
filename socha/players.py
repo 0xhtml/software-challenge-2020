@@ -103,13 +103,6 @@ class AlphaBeta:
         if len(opp.difference(empty)) == 6:
             value += 200
 
-        for i, move in enumerate(reversed(gamestate.moves)):
-            if isinstance(move, moves.SkipMove):
-                if i % 2 == 0:
-                    value -= 1000
-                else:
-                    value += 1000
-
         return value
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:

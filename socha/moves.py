@@ -1,13 +1,11 @@
 class Move:
     def do(self, gamestate):
-        gamestate.moves.append(self)
         gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
         gamestate.turn += 1
         gamestate.board.cache = {}
         return gamestate
 
     def undo(self, gamestate):
-        gamestate.moves.pop()
         gamestate.color, gamestate.opp = gamestate.opp, gamestate.color
         gamestate.turn -= 1
         gamestate.board.cache = {}
