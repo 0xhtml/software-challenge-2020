@@ -1,5 +1,4 @@
 import socket
-import threading
 from xml.etree import ElementTree
 
 from . import gamestate, moves, players
@@ -61,13 +60,7 @@ class Client:
                 if tagclass == "memento":
                     self.gamestate = gamestate.parse(tagdata.find("state"))
                 elif tagclass == "sc.framework.plugins.protocol.MoveRequest":
-                    thread = threading.Thread(target=self.run_bot)
-                    thread.start()
-
-                    if self.thread is not None and self.thread.is_alive():
-                        self.thread._stop()
-
-                    self.thread = thread
+                    self.send_move(self.player.get(self.gamestate))
                 elif tagclass == "error":
                     self.send("<sc.protocol.responses.CloseConnection />")
                     self.send("</protocol>")
@@ -91,9 +84,6 @@ class Client:
                 self.send("</protocol>")
             else:
                 print(f"Unknown tag <{tag.tag}>")
-
-    def run_bot(self):
-        self.send_move(self.player.get(self.gamestate))
 
     def join_any_game(self):
         self.send("<join gameType=\"swc_2020_hive\"/>")
