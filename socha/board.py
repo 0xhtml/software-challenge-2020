@@ -10,32 +10,22 @@ class Board:
     def empty(self):
         if "empty" in self.cache:
             return self.cache["empty"].copy()
-        empty = set()
-        for pos in self.fields:
-            if len(self.fields[pos]) == 0:
-                empty.add(pos)
+        empty = {x for x, y in self.fields.items() if y == []}
         self.cache["empty"] = empty
         return empty.copy()
 
     def nonempty(self):
         if "nonempty" in self.cache:
             return self.cache["nonempty"].copy()
-        nonempty = set()
-        for pos in self.fields:
-            if len(self.fields[pos]) > 0:
-                nonempty.add(pos)
+        nonempty = {x for x, y in self.fields.items() if y != []}
         self.cache["nonempty"] = nonempty
         return nonempty.copy()
 
     def color(self, color: str):
         if "color" + color in self.cache:
             return self.cache["color" + color].copy()
-        positions = set()
-        for pos in self.fields:
-            if len(self.fields[pos]) == 0:
-                continue
-            if self.fields[pos][-1][0] == color:
-                positions.add(pos)
+        positions = {x for x, y in self.fields.items() if y != []
+                     and y[-1][0] == color}
         self.cache["color" + color] = positions
         return positions.copy()
 

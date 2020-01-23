@@ -90,11 +90,7 @@ class GameState:
         if (self.turn > 5 and (self.color, "BEE") in self.undeployed):
             types = {"BEE"}
         else:
-            # Get own undeployed pieces
-            undeployed = filter(lambda x: x[0] == self.color, self.undeployed)
-
-            # Convert pieces to types
-            types = {x[1] for x in undeployed}
+            types = {x[1] for x in self.undeployed if x[0] == self.color}
 
         # Return all combinations of pieces and destinations
         return {
