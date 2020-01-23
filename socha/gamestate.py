@@ -4,13 +4,12 @@ from . import board, moves
 
 
 class GameState:
-    def __init__(self, c: str, t: int, b: board.Board, undep: list, m: list):
+    def __init__(self, c: str, t: int, b: board.Board, undep: list):
         self.color = c
         self.opp = "BLUE" if c == "RED" else "RED"
         self.turn = t
         self.board = b
         self.undeployed = undep
-        self.moves = m
         self.directions = [
             (1, 0),
             (1, -1),
@@ -221,4 +220,4 @@ def parse(xml: ElementTree.Element) -> GameState:
     for piece in xml.findall("*/piece"):
         undeployed.append((piece.get("owner"), piece.get("type")))
 
-    return GameState(color, turn, _board, undeployed, [])
+    return GameState(color, turn, _board, undeployed)

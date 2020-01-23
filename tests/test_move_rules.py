@@ -19,7 +19,7 @@ def drag(fields: dict, dests: set, obs=set()):
                 fields[(x, y)] = [("RED", x) for x in fields[(x, y)]]
 
     _board = board.Board(fields, obs)
-    _gamestate = gamestate.GameState("RED", 10, _board, set(), [])
+    _gamestate = gamestate.GameState("RED", 10, _board, set())
     possible_moves = _gamestate.get_possible_moves()
 
     for move in possible_moves:
