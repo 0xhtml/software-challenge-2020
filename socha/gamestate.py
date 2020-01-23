@@ -19,16 +19,28 @@ class GameState:
             (0, 1)
         ]
 
-    def get_neighbours(self, pos: tuple):
-        return ((pos[0] + x[0], pos[1] + x[1]) for x in self.directions)
+    def get_neighbours(self, pos: tuple) -> set:
+        x, y = pos
+        return {
+            (x + 1, y),
+            (x + 1, y - 1),
+            (x, y - 1),
+            (x - 1, y),
+            (x - 1, y + 1),
+            (x, y + 1)
+        }
 
     def is_connected(self, fields: set) -> bool:
-        next = {fields.pop()}
-        while len(next) > 0:
-            next = {y for x in next for y in self.get_neighbours(x)}
-            next.intersection_update(fields)
-            fields.difference_update(next)
-        return len(fields) == 0
+        todo = {fields.pop()}
+        while len(todo) > 0:
+            field = todo.pop()
+            neighbours = self.get_neighbours(field)
+            fields.difference_update(neighbours)
+            if len(fields) == 0:
+                return True
+            neighbours.intersection_update(fields)
+            todo.update(neighbours)
+        return False
 
     def get_possible_moves(self) -> set:
         possible_moves = self.get_possible_set_moves()
@@ -49,7 +61,7 @@ class GameState:
             field = self.board.color(self.opp).pop()
 
             # Get neighbours of piece
-            dests = set(self.get_neighbours(field))
+            dests = self.get_neighbours(field)
 
             # Only empty fields
             dests.intersection_update(self.board.empty())
@@ -134,7 +146,7 @@ class GameState:
 
     def get_beetle_move_dests(self, pos: tuple) -> set:
         # Get neighbours of pos
-        neighbours = set(self.get_neighbours(pos))
+        neighbours = self.get_neighbours(pos)
 
         # If we are on top of another piece add it aswell
         if len(self.board.fields[pos]) > 1:
@@ -157,7 +169,7 @@ class GameState:
 
     def get_bee_move_dests(self, pos: tuple, start_pos: tuple) -> set:
         # Get neighbours of pos
-        neighbours = set(self.get_neighbours(pos))
+        neighbours = self.get_neighbours(pos)
 
         # Only take fields with pieces
         neighbours.intersection_update(self.board.nonempty())
@@ -232,7 +244,7 @@ class GameState:
         for field in self.board.fields:
             for piece in self.board.fields[field]:
                 if piece == (color, "BEE"):
-                    return set(self.get_neighbours(field))
+                    return self.get_neighbours(field)
         return set()
 
     def game_ended(self):
