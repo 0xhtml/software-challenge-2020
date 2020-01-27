@@ -233,8 +233,8 @@ class GameState:
         return dests
 
     def around_bee(self, color: str) -> set:
-        for field in self.board.fields:
-            for piece in self.board.fields[field]:
+        for field, pieces in self.board.fields.items():
+            for piece in pieces:
                 if piece == (color, "BEE"):
                     return self.get_neighbours(field)
         return set()
