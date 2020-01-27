@@ -31,16 +31,12 @@ class GameState:
         }
 
     def is_connected(self, fields: set) -> bool:
-        todo = {fields.pop()}
-        while len(todo) > 0:
-            field = todo.pop()
-            neighbours = self.get_neighbours(field)
-            fields.difference_update(neighbours)
-            if len(fields) == 0:
-                return True
-            neighbours.intersection_update(fields)
-            todo.update(neighbours)
-        return False
+        next = {fields.pop()}
+        while len(next) > 0:
+            next = {y for x in next for y in self.get_neighbours(x)}
+            next.intersection_update(fields)
+            fields.difference_update(next)
+        return len(fields) == 0
 
     def get_possible_moves(self) -> set:
         possible_moves = self.get_possible_set_moves()
