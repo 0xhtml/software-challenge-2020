@@ -9,25 +9,25 @@ class Board:
 
     def empty(self):
         if "empty" in self.cache:
-            return self.cache["empty"].copy()
-        empty = {x for x, y in self.fields.items() if y == []}
+            return self.cache["empty"]
+        empty = frozenset(x for x, y in self.fields.items() if y == [])
         self.cache["empty"] = empty
-        return empty.copy()
+        return empty
 
     def nonempty(self):
         if "nonempty" in self.cache:
-            return self.cache["nonempty"].copy()
-        nonempty = {x for x, y in self.fields.items() if y != []}
+            return self.cache["nonempty"]
+        nonempty = frozenset(x for x, y in self.fields.items() if y != [])
         self.cache["nonempty"] = nonempty
-        return nonempty.copy()
+        return nonempty
 
     def color(self, color: str):
         if "color" + color in self.cache:
-            return self.cache["color" + color].copy()
-        positions = {x for x, y in self.fields.items() if y != []
-                     and y[-1][0] == color}
+            return self.cache["color" + color]
+        positions = frozenset(x for x, y in self.fields.items()
+                              if y != [] and y[-1][0] == color)
         self.cache["color" + color] = positions
-        return positions.copy()
+        return positions
 
     def __hash__(self):
         return hash(frozenset((x, *self.fields[x]) for x in self.nonempty()))

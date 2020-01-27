@@ -107,7 +107,7 @@ class GameState:
             # When there is no piece under piece
             if len(self.board.fields[pos]) == 1:
                 # Get all set pieces
-                fields = self.board.nonempty()
+                fields = set(self.board.nonempty())
 
                 # Remove piece that is being dragged
                 fields.discard(pos)
@@ -138,20 +138,20 @@ class GameState:
 
     def get_beetle_move_dests(self, pos: tuple) -> set:
         # Get neighbours of pos
-        neighbours = self.get_neighbours(pos)
+        all_neighbours = self.get_neighbours(pos)
+
+        # Only take fields with pieces
+        neighbours = all_neighbours.intersection(self.board.nonempty())
 
         # If we are on top of another piece add it aswell
         if len(self.board.fields[pos]) > 1:
             neighbours.add(pos)
 
-        # Only take fields with pieces
-        neighbours.intersection_update(self.board.nonempty())
-
         # Get fields next to fields
         dests = {y for x in neighbours for y in self.get_neighbours(x)}
 
         # Only take fields in reach
-        dests.intersection_update(self.get_neighbours(pos))
+        dests.intersection_update(all_neighbours)
 
         # Only take valid fields
         dests.intersection_update(self.board.fields.keys())
@@ -161,10 +161,10 @@ class GameState:
 
     def get_bee_move_dests(self, pos: tuple, start_pos: tuple) -> set:
         # Get neighbours of pos
-        neighbours = self.get_neighbours(pos)
+        all_neighbours = self.get_neighbours(pos)
 
         # Only take fields with pieces
-        neighbours.intersection_update(self.board.nonempty())
+        neighbours = all_neighbours.intersection(self.board.nonempty())
 
         # Remove own field
         neighbours.discard(start_pos)
@@ -178,7 +178,7 @@ class GameState:
         obstructed = self.board.obstructed.copy()
 
         # Only take obstructed fields in reach
-        obstructed.intersection_update(self.get_neighbours(pos))
+        obstructed.intersection_update(all_neighbours)
 
         # Get fields next to obscructed fields
         obstructed = (y for x in obstructed for y in self.get_neighbours(x))
@@ -187,7 +187,7 @@ class GameState:
         dests.difference_update(obstructed)
 
         # Only take fields in reach
-        dests.intersection_update(self.get_neighbours(pos))
+        dests.intersection_update(all_neighbours)
 
         # Only take empty fields
         dests.intersection_update(self.board.empty())
