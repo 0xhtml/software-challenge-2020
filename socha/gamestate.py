@@ -54,7 +54,7 @@ class GameState:
         # Second turn
         elif self.turn == 1:
             # Get first set piece
-            field = self.board.color(self.opp).pop()
+            field = self.board.color(self.opp).__iter__().__next__()
 
             # Get neighbours of piece
             dests = self.get_neighbours(field)
