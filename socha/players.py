@@ -1,5 +1,6 @@
 import math
 import time
+import csocha
 from . import gamestate, moves
 
 
@@ -136,7 +137,7 @@ class AlphaBeta:
             val = -10
         else:
             empty = gamestate.board.empty()
-            val = -len(gamestate.get_neighbours(bee).difference(empty))
+            val = -len(empty.difference(csocha.neighbours(bee)))
         return val
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
