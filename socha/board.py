@@ -1,4 +1,5 @@
 from xml.etree import ElementTree
+import csocha
 
 
 class Board:
@@ -10,14 +11,14 @@ class Board:
     def empty(self) -> frozenset:
         if "empty" in self.cache:
             return self.cache["empty"]
-        empty = frozenset(x for x, y in self.fields.items() if y == [])
+        empty = csocha.empty(self.fields)
         self.cache["empty"] = empty
         return empty
 
     def nonempty(self) -> frozenset:
         if "nonempty" in self.cache:
             return self.cache["nonempty"]
-        nonempty = frozenset(x for x, y in self.fields.items() if y != [])
+        nonempty = csocha.nonempty(self.fields)
         self.cache["nonempty"] = nonempty
         return nonempty
 
