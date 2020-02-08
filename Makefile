@@ -28,10 +28,13 @@ clean:
 	rm -rf */*.pyc */__pycache__ .pytest_cache server.zip build socha.zip
 
 build: clean
-	python3.6 -c "import socha; from socha import __main__"
+	python setup.py build
+	python -c "import socha; from socha import __main__"
 	mkdir -p build/socha
 	cp socha/__pycache__/*.pyc build/socha
 	for x in build/socha/*;do mv $$x $${x%.cpython-36.pyc}.pyc;done
+	mv build/lib*/csocha* build/csocha.so
+	rm -r build/lib* build/temp*
 	echo "#!/bin/sh\npython -m socha \"\$$@\"" > build/run.sh
 	cd build; zip -r ../socha.zip *
 	rm -r build
