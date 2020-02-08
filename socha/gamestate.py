@@ -232,20 +232,31 @@ class GameState:
         dests.intersection_update(self.board.empty())
         return dests
 
-    def around_bee(self, color: str) -> set:
+    def bee(self, color: str) -> tuple:
         for field, pieces in self.board.fields.items():
             for piece in pieces:
                 if piece == (color, "BEE"):
-                    return self.get_neighbours(field)
-        return set()
+                    return field
+        return None
 
     def game_ended(self):
         if self.color != "RED":
             return False
         empty = self.board.empty()
-        return self.around_bee(self.color).difference(empty) == 6 or \
-            self.around_bee(self.opp).difference(empty) == 6 or \
-            self.turn >= 60
+
+        ownbee = self.bee(self.color)
+        if ownbee is None:
+            own = 0
+        else:
+            own = len(self.get_neighbours(ownbee).difference(empty))
+
+        oppbee = self.bee(self.opp)
+        if oppbee is None:
+            opp = 0
+        else:
+            opp = len(self.get_neighbours(oppbee).difference(empty))
+
+        return own == 6 or opp == 6 or self.turn >= 60
 
 
 def parse(xml: ElementTree.Element) -> GameState:

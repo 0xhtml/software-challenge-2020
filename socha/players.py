@@ -77,10 +77,18 @@ class AlphaBeta:
         return possible_moves[0]
 
     def evaluate(self, gamestate: gamestate.GameState):
-        empty = gamestate.board.empty()
-        own = len(gamestate.around_bee(gamestate.color).difference(empty))
-        opp = len(gamestate.around_bee(gamestate.opp).difference(empty))
-        return (opp or 10) - (own or 10)
+        val = self.evaluate_single(gamestate, gamestate.color)
+        val -= self.evaluate_single(gamestate, gamestate.opp)
+        return val
+
+    def evaluate_single(self, gamestate: gamestate.GameState, color: str):
+        bee = gamestate.bee(color)
+        if bee is None:
+            val = -10
+        else:
+            empty = gamestate.board.empty()
+            val = -len(gamestate.get_neighbours(bee).difference(empty))
+        return val
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.clock()
