@@ -23,15 +23,17 @@ static PyObject* empty(PyObject* self, PyObject* args){
     PyObject* fields;
     PyArg_ParseTuple(args, "O", &fields);
 
-    PyObject* keys = PyDict_Keys(fields);
-    Py_ssize_t len = PySequence_Size(keys);
-    PyObject* pos;
+    PyObject* items = PyDict_Items(fields);
+    Py_ssize_t len = PyList_Size(items);
+    PyObject *item, *key, *val;
     for (Py_ssize_t i = 0; i < len; i++){
-        pos = PySequence_GetItem(keys, i);
-        if(PyList_Size(PyDict_GetItem(fields, pos)) == 0) {
-            PySet_Add(emptyfields, pos);
+        item = PyList_GetItem(items, i);
+        key = PyTuple_GetItem(item, 0);
+        val = PyTuple_GetItem(item, 1);
+        if(PyList_Size(val) == 0) {
+            PySet_Add(emptyfields, key);
         }
-        Py_DECREF(pos);
+        Py_DECREF(item);
     }
 
     return emptyfields;
@@ -43,15 +45,17 @@ static PyObject* nonempty(PyObject* self, PyObject* args){
     PyObject* fields;
     PyArg_ParseTuple(args, "O", &fields);
 
-    PyObject* keys = PyDict_Keys(fields);
-    Py_ssize_t len = PySequence_Size(keys);
-    PyObject* pos;
+    PyObject* items = PyDict_Items(fields);
+    Py_ssize_t len = PyList_Size(items);
+    PyObject *item, *key, *val;
     for (Py_ssize_t i = 0; i < len; i++){
-        pos = PySequence_GetItem(keys, i);
-        if(PyList_Size(PyDict_GetItem(fields, pos)) != 0) {
-            PySet_Add(nonemptyfields, pos);
+        item = PyList_GetItem(items, i);
+        key = PyTuple_GetItem(item, 0);
+        val = PyTuple_GetItem(item, 1);
+        if(PyList_Size(val) != 0) {
+            PySet_Add(nonemptyfields, key);
         }
-        Py_DECREF(pos);
+        Py_DECREF(item);
     }
 
     return nonemptyfields;
