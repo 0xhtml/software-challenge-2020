@@ -7,37 +7,27 @@ class Board:
         self.obstructed = obstructed
         self.cache = {}
 
-    def empty(self):
+    def empty(self) -> frozenset:
         if "empty" in self.cache:
-            return self.cache["empty"].copy()
-        empty = set()
-        for pos in self.fields:
-            if len(self.fields[pos]) == 0:
-                empty.add(pos)
+            return self.cache["empty"]
+        empty = frozenset(x for x, y in self.fields.items() if y == [])
         self.cache["empty"] = empty
-        return empty.copy()
+        return empty
 
-    def nonempty(self):
+    def nonempty(self) -> frozenset:
         if "nonempty" in self.cache:
-            return self.cache["nonempty"].copy()
-        nonempty = set()
-        for pos in self.fields:
-            if len(self.fields[pos]) > 0:
-                nonempty.add(pos)
+            return self.cache["nonempty"]
+        nonempty = frozenset(x for x, y in self.fields.items() if y != [])
         self.cache["nonempty"] = nonempty
-        return nonempty.copy()
+        return nonempty
 
-    def color(self, color: str):
+    def color(self, color: str) -> frozenset:
         if "color" + color in self.cache:
-            return self.cache["color" + color].copy()
-        positions = set()
-        for pos in self.fields:
-            if len(self.fields[pos]) == 0:
-                continue
-            if self.fields[pos][-1][0] == color:
-                positions.add(pos)
+            return self.cache["color" + color]
+        positions = frozenset(x for x, y in self.fields.items()
+                              if y != [] and y[-1][0] == color)
         self.cache["color" + color] = positions
-        return positions.copy()
+        return positions
 
     def __hash__(self):
         return hash(frozenset((x, *self.fields[x]) for x in self.nonempty()))

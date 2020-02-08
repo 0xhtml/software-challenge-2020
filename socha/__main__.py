@@ -1,19 +1,16 @@
-import sys
-
+import argparse
 from . import net
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("-h", default="localhost")
+    parser.add_argument("-p", type=int, default=13050)
+    parser.add_argument("-r", default=None)
+    args = parser.parse_args()
 
-def run(host="localhost", port=13050, reservation=None):
-    if isinstance(port, str):
-        port = int(port)
+    client = net.Client(args.h, args.p)
 
-    client = net.Client(host, port)
-
-    if reservation is None:
+    if args.r is None:
         client.join_any_game()
     else:
-        client.join_reservation(reservation)
-
-
-if __name__ == "__main__":
-    run(*sys.argv[1:])
+        client.join_reservation(args.r)

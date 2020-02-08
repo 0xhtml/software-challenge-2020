@@ -9,8 +9,6 @@ class Client:
         self.room = None
         self.gamestate = None
 
-        self.thread = None
-
         self.player = players.AlphaBeta()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,8 +20,7 @@ class Client:
 
     def send_move(self, move: moves.Move):
         print(f"Send move {move}")
-        data = f"<room roomId=\"{self.room}\">{move.__xml__()}</room>"
-        self.send(data)
+        self.send(f"<room roomId=\"{self.room}\">{move.__xml__()}</room>")
 
     def recv(self):
         done = False
@@ -85,8 +82,7 @@ class Client:
             else:
                 print(f"Unknown tag <{tag.tag}>")
 
-    def join_any_game(self):
-        self.send("<join gameType=\"swc_2020_hive\"/>")
+    def run(self):
         try:
             self.recv()
         except KeyboardInterrupt:
@@ -96,5 +92,10 @@ class Client:
         finally:
             self.socket.close()
 
+    def join_any_game(self):
+        self.send("<join gameType=\"swc_2020_hive\"/>")
+        self.run()
+
     def join_reservation(self, reservation: str):
         self.send(f"<joinPrepared reservationCode=\"{reservation}\" />")
+        self.run()
