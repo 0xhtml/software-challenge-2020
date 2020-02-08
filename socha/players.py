@@ -24,7 +24,7 @@ class AlphaBeta:
             ):
                 return transposition[4]
 
-        if (time.time_ns() - self.now > 1900000000):
+        if (time.clock() - self.now > 1.8):
             self.timeout = True
         if (depth <= 0 or gamestate.game_ended() or self.timeout):
             return self.evaluate(gamestate)
@@ -83,10 +83,9 @@ class AlphaBeta:
         return (opp or 10) - (own or 10)
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
-        self.now = time.time_ns()
+        self.now = time.clock()
 
         move = self.IDDFS(gamestate)
 
-        then = time.time_ns() - self.now
-        print("t", round(then/1000000000, 2))
+        print("t", round(time.clock() - self.now, 2))
         return move
