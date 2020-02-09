@@ -4,76 +4,125 @@ from . import gamestate, moves
 
 
 class AlphaBeta:
-    transpositions = {}
+    tranpositions = {}
 
-    def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
-        boardhash = hash(gamestate.board)
-        if boardhash in self.transpositions:
-            transposition = self.transpositions[boardhash]
-            if (
-                transposition[0] >= depth and
-                transposition[1][0] >= a and
-                transposition[1][1] <= b and
-                transposition[2] == gamestate.color and
-                (
-                    (
-                        gamestate.turn > 5 and
-                        gamestate.turn + transposition[0] < 60
-                    ) or transposition[3] == gamestate.turn
-                )
-            ):
-                return transposition[4]
+    def alphaBeta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
+        # Generate gamestate hash
+        gshash = gs.__hash__(depth)
 
+        # Check for transposition
+        if gshash in self.tranpositions:
+            # Get transposition
+            transposition = self.tranpositions[gshash]
+
+            # Check transposition depth
+            if transposition[0] >= depth:
+                if transposition[1] == 0:
+                    # Exact
+                    return transposition[2]
+                elif transposition[1] == 1:
+                    # Upper bound
+                    b = min(transposition[2], b)
+                elif transposition[1] == 2:
+                    # Lower bound
+                    a = max(transposition[2], a)
+
+                # Cut off
+                if a > b:
+                    return a
+
+        # Check for timeout
         if (time.clock() - self.now > 1.8):
             self.timeout = True
-        if (depth <= 0 or gamestate.game_ended() or self.timeout):
-            return self.evaluate(gamestate)
 
-        window = (a, b)
-        for move in gamestate.get_possible_moves():
-            move.do(gamestate)
-            value = -self.alphaBeta(
-                gamestate,
-                depth - 1,
-                -b,
-                -a
-            )
-            move.undo(gamestate)
-            if value >= b:
-                return b
+        # If depth reached, end of game or timeout reached then stop
+        if (depth <= 0 or gs.game_ended() or self.timeout):
+            return self.evaluate(gs)
+
+        # Save alpha for later use
+        start_a = a
+
+        # Go through all moves
+        for move in gs.get_possible_moves():
+            # Do move
+            move.do(gs)
+
+            value = -self.alphaBeta(gs, depth - 1, -b, -a)
+
+            # Undo move
+            move.undo(gs)
+
+            # New best alpha
             if value > a:
                 a = value
 
-        self.transpositions[boardhash] = (
-            depth, window, gamestate.color, gamestate.turn, a
-        )
+            # Beta-cutoff
+            if value >= b:
+                break
+
+        if a <= start_a:
+            # Insert into transposition table as upper bound
+            self.tranpositions[gshash] = (depth, 1, a)
+        elif a > b:
+            # Insert into transposition table as lower bound
+            self.tranpositions[gshash] = (depth, 2, a)
+        else:
+            # Insert into transposition table as exact
+            self.tranpositions[gshash] = (depth, 0, a)
+
+        # Return value
         return a
 
     def IDDFS(self, gamestate: gamestate.GameState):
-        possible_moves = gamestate.get_possible_moves()
+        # Reset timeout
+        self.timeout = False
+
+        # Set initial values
         depth = 0
         values = {}
-        self.timeout = False
-        while not self.timeout and depth < 20:
+
+        # Get all possible moves
+        possible_moves = list(gamestate.get_possible_moves())
+
+        # Do pvSearch while not timed out and depth under 20
+        while not self.timeout and depth < 3:
+            # Go through all moves
             for move in possible_moves:
+                # Do move
                 move.do(gamestate)
+
+                # Perform pvSearch
                 value = -self.alphaBeta(
                     gamestate,
                     depth,
                     -math.inf,
                     math.inf
                 )
+
+                # Undo move
                 move.undo(gamestate)
+
+                # Test if timeout was reached making value invalid
                 if self.timeout:
                     break
+
+                # Save value for next iteration and result
                 values[move] = value
+
+            # Sort moves based on values
             possible_moves = sorted(
                 possible_moves,
                 key=lambda m: values.get(m, -math.inf),
                 reverse=True
             )
+
+            # Increase depth for next iteration
             depth += 1
+
+        # Log info
         print("d", depth, "e", values.get(possible_moves[0]), end=" ")
+
+        # Return best move
         return possible_moves[0]
 
     def evaluate(self, gamestate: gamestate.GameState):

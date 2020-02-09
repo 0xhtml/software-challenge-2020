@@ -39,6 +39,9 @@ class SetMove(Move):
     def __str__(self) -> str:
         return f"SetMove({self.piece}, {self.dest})"
 
+    def __hash__(self):
+        return hash(self.piece + self.dest)
+
 
 class DragMove(Move):
     def __init__(self, start: tuple, dest: tuple):
@@ -68,6 +71,9 @@ class DragMove(Move):
     def __str__(self) -> str:
         return f"DragMove({self.start}, {self.dest})"
 
+    def __hash__(self):
+        return hash(self.start + self.dest)
+
 
 class SkipMove(Move):
     def __xml__(self) -> str:
@@ -75,3 +81,6 @@ class SkipMove(Move):
 
     def __str__(self) -> str:
         return f"SkipMove()"
+
+    def __hash__(self):
+        return hash("SkipMove")
