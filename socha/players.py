@@ -4,9 +4,33 @@ from . import gamestate, moves
 
 
 class AlphaBeta:
-    sort_table = {}
+    tranpositions = {}
 
     def alphaBeta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
+        # Generate gamestate hash
+        gshash = gs.__hash__(depth)
+
+        # Check for transposition
+        if gshash in self.tranpositions:
+            # Get transposition
+            transposition = self.tranpositions[gshash]
+
+            # Check transposition depth
+            if transposition[0] >= depth:
+                if transposition[1] == 0:
+                    # Exact
+                    return transposition[2]
+                elif transposition[1] == 1:
+                    # Upper bound
+                    b = min(transposition[2], b)
+                elif transposition[1] == 2:
+                    # Lower bound
+                    a = max(transposition[2], a)
+
+                # Cut off
+                if a > b:
+                    return a
+
         # Check for timeout
         if (time.clock() - self.now > 1.8):
             self.timeout = True
@@ -15,29 +39,36 @@ class AlphaBeta:
         if (depth <= 0 or gs.game_ended() or self.timeout):
             return self.evaluate(gs)
 
+        # Save alpha for later use
+        start_a = a
+
         # Go through all moves
-        possible_moves = sorted(
-            gs.get_possible_moves(),
-            key=lambda x: self.sort_table.get(hash(x), -math.inf),
-            reverse=True
-        )
-        for move in possible_moves:
+        for move in gs.get_possible_moves():
             # Do move
             move.do(gs)
 
             value = -self.alphaBeta(gs, depth - 1, -b, -a)
-            self.sort_table[move.__hash__()] = value
 
             # Undo move
             move.undo(gs)
 
-            # Beta-cutoff
-            if value >= b:
-                return b
-
-            # New best move
+            # New best alpha
             if value > a:
                 a = value
+
+            # Beta-cutoff
+            if value >= b:
+                break
+
+        if a <= start_a:
+            # Insert into transposition table as upper bound
+            self.tranpositions[gshash] = (depth, 1, a)
+        elif a > b:
+            # Insert into transposition table as lower bound
+            self.tranpositions[gshash] = (depth, 2, a)
+        else:
+            # Insert into transposition table as exact
+            self.tranpositions[gshash] = (depth, 0, a)
 
         # Return value
         return a
@@ -70,8 +101,6 @@ class AlphaBeta:
 
                 # Undo move
                 move.undo(gamestate)
-
-                self.sort_table[move.__hash__()] = value
 
                 # Test if timeout was reached making value invalid
                 if self.timeout:
