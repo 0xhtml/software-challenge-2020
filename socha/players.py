@@ -4,76 +4,96 @@ from . import gamestate, moves
 
 
 class AlphaBeta:
-    transpositions = {}
+    sort_table = {}
 
-    def alphaBeta(self, gamestate: gamestate.GameState, depth: int, a, b):
-        boardhash = hash(gamestate.board)
-        if boardhash in self.transpositions:
-            transposition = self.transpositions[boardhash]
-            if (
-                transposition[0] >= depth and
-                transposition[1][0] >= a and
-                transposition[1][1] <= b and
-                transposition[2] == gamestate.color and
-                (
-                    (
-                        gamestate.turn > 5 and
-                        gamestate.turn + transposition[0] < 60
-                    ) or transposition[3] == gamestate.turn
-                )
-            ):
-                return transposition[4]
-
+    def alphaBeta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
+        # Check for timeout
         if (time.clock() - self.now > 1.8):
             self.timeout = True
-        if (depth <= 0 or gamestate.game_ended() or self.timeout):
-            return self.evaluate(gamestate)
 
-        window = (a, b)
-        for move in gamestate.get_possible_moves():
-            move.do(gamestate)
-            value = -self.alphaBeta(
-                gamestate,
-                depth - 1,
-                -b,
-                -a
-            )
-            move.undo(gamestate)
+        # If depth reached, end of game or timeout reached then stop
+        if (depth <= 0 or gs.game_ended() or self.timeout):
+            return self.evaluate(gs)
+
+        # Go through all moves
+        possible_moves = sorted(
+            gs.get_possible_moves(),
+            key=lambda x: self.sort_table.get(hash(x), -math.inf),
+            reverse=True
+        )
+        for move in possible_moves:
+            # Do move
+            move.do(gs)
+
+            value = -self.alphaBeta(gs, depth - 1, -b, -a)
+            self.sort_table[move.__hash__()] = value
+
+            # Undo move
+            move.undo(gs)
+
+            # Beta-cutoff
             if value >= b:
                 return b
+
+            # New best move
             if value > a:
                 a = value
 
-        self.transpositions[boardhash] = (
-            depth, window, gamestate.color, gamestate.turn, a
-        )
+        # Return value
         return a
 
     def IDDFS(self, gamestate: gamestate.GameState):
-        possible_moves = gamestate.get_possible_moves()
+        # Reset timeout
+        self.timeout = False
+
+        # Set initial values
         depth = 0
         values = {}
-        self.timeout = False
-        while not self.timeout and depth < 20:
+
+        # Get all possible moves
+        possible_moves = list(gamestate.get_possible_moves())
+
+        # Do pvSearch while not timed out and depth under 20
+        while not self.timeout and depth < 3:
+            # Go through all moves
             for move in possible_moves:
+                # Do move
                 move.do(gamestate)
+
+                # Perform pvSearch
                 value = -self.alphaBeta(
                     gamestate,
                     depth,
                     -math.inf,
                     math.inf
                 )
+
+                # Undo move
                 move.undo(gamestate)
+
+                self.sort_table[move.__hash__()] = value
+
+                # Test if timeout was reached making value invalid
                 if self.timeout:
                     break
+
+                # Save value for next iteration and result
                 values[move] = value
+
+            # Sort moves based on values
             possible_moves = sorted(
                 possible_moves,
                 key=lambda m: values.get(m, -math.inf),
                 reverse=True
             )
+
+            # Increase depth for next iteration
             depth += 1
+
+        # Log info
         print("d", depth, "e", values.get(possible_moves[0]), end=" ")
+
+        # Return best move
         return possible_moves[0]
 
     def evaluate(self, gamestate: gamestate.GameState):
