@@ -137,7 +137,7 @@ class AlphaBeta:
             val = -10
         else:
             empty = gamestate.board.empty()
-            val = -len(empty.difference(csocha.neighbours(bee)))
+            val = -len(set(csocha.neighbours(bee)).difference(empty))
         return val
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
