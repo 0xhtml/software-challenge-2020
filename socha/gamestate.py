@@ -250,8 +250,8 @@ class GameState:
 
     def __hash__(self, depth=1):
         if self.turn > 7 and self.turn < 60 - depth:
-            return csocha.hash(self.board.fields) + str(self.color)
-        return csocha.hash(self.board.fields) + str(self.turn)
+            return csocha.hash(self.board.fields) + str(self.color).encode()
+        return csocha.hash(self.board.fields) + str(self.turn).encode()
 
 
 def parse(xml: ElementTree.Element) -> GameState:
