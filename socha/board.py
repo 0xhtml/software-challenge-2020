@@ -11,14 +11,14 @@ class Board:
     def empty(self) -> frozenset:
         if "empty" in self.cache:
             return self.cache["empty"]
-        empty = csocha.empty(self.fields)
+        empty = frozenset(csocha.empty(self.fields))
         self.cache["empty"] = empty
         return empty
 
     def nonempty(self) -> frozenset:
         if "nonempty" in self.cache:
             return self.cache["nonempty"]
-        nonempty = csocha.nonempty(self.fields)
+        nonempty = frozenset(csocha.nonempty(self.fields))
         self.cache["nonempty"] = nonempty
         return nonempty
 
