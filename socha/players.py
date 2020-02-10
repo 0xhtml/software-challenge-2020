@@ -134,11 +134,9 @@ class AlphaBeta:
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
         bee = gamestate.bee(color)
         if bee is None:
-            val = -10
-        else:
-            empty = gamestate.board.empty()
-            val = -len(set(csocha.neighbours(bee)).difference(empty))
-        return val
+            return 0
+        empty = gamestate.board.empty()
+        return -len(set(csocha.neighbours(bee)).difference(empty))
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.clock()
