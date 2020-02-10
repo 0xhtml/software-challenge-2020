@@ -11,14 +11,6 @@ setup-server:
 	unzip -u server.zip -d server
 	rm server.zip
 
-pytest: setup setup-server
-	@echo LEGACY: Will be removed in next version
-	pytest
-
-flake8: setup
-	@echo LEGACY: Will be removed in next version
-	flake8 socha
-
 clean:
 	rm -rf */*.pyc */__pycache__ .pytest_cache server.zip build socha.zip
 

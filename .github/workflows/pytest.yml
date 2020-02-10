@@ -13,5 +13,9 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.7
+    - name: Setup with pip
+      run: make setup
+    - name: Setup server
+      run: make setup-server
     - name: Test with pytest
-      run: make pytest
+      run: pytest
