@@ -65,13 +65,14 @@ static PyObject* color(PyObject* self, PyObject* args){
     PyObject* colorfields = PySet_New(NULL);
 
     PyObject* fields;
-    PyObject* color;
-    PyArg_ParseTuple(args, "OO", &fields, &color);
+    char* color;
+    PyArg_ParseTuple(args, "Os", &fields, &color);
 
     PyObject* items = PyDict_Items(fields);
     Py_ssize_t len = PyList_Size(items);
     Py_ssize_t size;
-    PyObject *item, *key, *val, *lastitem, *lastitemcolor;
+    PyObject *item, *key, *val, *lastitem;
+    char *itemcolor, *del;
     for (Py_ssize_t i = 0; i < len; i++){
         item = PyList_GetItem(items, i);
         key = PyTuple_GetItem(item, 0);
@@ -80,8 +81,8 @@ static PyObject* color(PyObject* self, PyObject* args){
         if (size == 0)
             continue;
         lastitem = PyList_GetItem(val, size - 1);
-        lastitemcolor = PyTuple_GetItem(lastitem, 0);
-        if(lastitemcolor == color) {
+        PyArg_ParseTuple(lastitem, "ss", &itemcolor, &del);
+        if(strcmp(itemcolor, color) == 0) {
             PySet_Add(colorfields, key);
         }
         Py_DECREF(item);
@@ -119,7 +120,7 @@ static PyObject* hash(PyObject* self, PyObject* args){
                 } else if (strcmp(type, "GRASSHOPPER") == 0) {
                     hash[layer * 91 + i] = (hash[layer * 91 + i] << 3) + 3;
                 } else if (strcmp(type, "SPIDER") == 0) {
-                    hash[layer * 91 + i] = (hash[layer * 91 + i] << 3) + 3;
+                    hash[layer * 91 + i] = (hash[layer * 91 + i] << 3) + 4;
                 }
                 if (strcmp(color, "RED") == 0){
                     hash[layer * 91 + i] = hash[layer * 91 + i] << 1;

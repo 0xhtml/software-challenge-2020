@@ -47,7 +47,7 @@ class GameState:
             field = self.board.color(self.opp).__iter__().__next__()
 
             # Get empty fields
-            dests = self.board.empty()
+            dests = set(self.board.empty())
 
             # Only neighbours of piece
             dests.intersection_update(csocha.neighbours(field))
