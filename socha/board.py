@@ -25,8 +25,7 @@ class Board:
     def color(self, color: str) -> frozenset:
         if "color" + color in self.cache:
             return self.cache["color" + color]
-        positions = frozenset(x for x, y in self.fields.items()
-                              if y != [] and y[-1][0] == color)
+        positions = frozenset(csocha.color(self.fields, color))
         self.cache["color" + color] = positions
         return positions
 
