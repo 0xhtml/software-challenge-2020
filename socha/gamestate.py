@@ -1,4 +1,5 @@
 from xml.etree import ElementTree
+import csocha
 
 from . import board, moves
 
@@ -19,21 +20,10 @@ class GameState:
             (0, 1)
         ]
 
-    def get_neighbours(self, pos: tuple) -> set:
-        x, y = pos
-        return {
-            (x + 1, y),
-            (x + 1, y - 1),
-            (x, y - 1),
-            (x - 1, y),
-            (x - 1, y + 1),
-            (x, y + 1)
-        }
-
     def is_connected(self, fields: set) -> bool:
         next = {fields.pop()}
         while len(next) > 0:
-            next = {y for x in next for y in self.get_neighbours(x)}
+            next = {y for x in next for y in csocha.neighbours(x)}
             next.intersection_update(fields)
             fields.difference_update(next)
         return len(fields) == 0
@@ -56,11 +46,11 @@ class GameState:
             # Get first set piece
             field = self.board.color(self.opp).__iter__().__next__()
 
-            # Get neighbours of piece
-            dests = self.get_neighbours(field)
+            # Get empty fields
+            dests = set(self.board.empty())
 
-            # Only empty fields
-            dests.intersection_update(self.board.empty())
+            # Only neighbours of piece
+            dests.intersection_update(csocha.neighbours(field))
 
         # All other turns
         else:
@@ -68,7 +58,7 @@ class GameState:
             dests = self.board.color(self.color)
 
             # Get neighbours of own pieces
-            dests = {y for x in dests for y in self.get_neighbours(x)}
+            dests = {y for x in dests for y in csocha.neighbours(x)}
 
             # Only empty fields
             dests.intersection_update(self.board.empty())
@@ -77,7 +67,7 @@ class GameState:
             opp = self.board.color(self.opp)
 
             # Get neighbours of opponent pieces
-            opp = (y for x in opp for y in self.get_neighbours(x))
+            opp = (y for x in opp for y in csocha.neighbours(x))
 
             # Only fields not next to opponent pieces
             dests.difference_update(opp)
@@ -138,17 +128,17 @@ class GameState:
 
     def get_beetle_move_dests(self, pos: tuple) -> set:
         # Get neighbours of pos
-        all_neighbours = self.get_neighbours(pos)
+        all_neighbours = csocha.neighbours(pos)
 
         # Only take fields with pieces
-        neighbours = all_neighbours.intersection(self.board.nonempty())
+        neighbours = set(self.board.nonempty().intersection(all_neighbours))
 
         # If we are on top of another piece add it aswell
         if len(self.board.fields[pos]) > 1:
             neighbours.add(pos)
 
         # Get fields next to fields
-        dests = {y for x in neighbours for y in self.get_neighbours(x)}
+        dests = {y for x in neighbours for y in csocha.neighbours(x)}
 
         # Only take fields in reach
         dests.intersection_update(all_neighbours)
@@ -161,10 +151,10 @@ class GameState:
 
     def get_bee_move_dests(self, pos: tuple, start_pos: tuple) -> set:
         # Get neighbours of pos
-        all_neighbours = self.get_neighbours(pos)
+        all_neighbours = csocha.neighbours(pos)
 
         # Only take fields with pieces
-        neighbours = all_neighbours.intersection(self.board.nonempty())
+        neighbours = set(self.board.nonempty().intersection(all_neighbours))
 
         # Remove own field
         neighbours.discard(start_pos)
@@ -172,7 +162,7 @@ class GameState:
         # Get fields next to fields
         dests = set()
         for neighbour in neighbours:
-            dests.symmetric_difference_update(self.get_neighbours(neighbour))
+            dests.symmetric_difference_update(csocha.neighbours(neighbour))
 
         # Get obstructed fields
         obstructed = self.board.obstructed.copy()
@@ -181,7 +171,7 @@ class GameState:
         obstructed.intersection_update(all_neighbours)
 
         # Get fields next to obscructed fields
-        obstructed = (y for x in obstructed for y in self.get_neighbours(x))
+        obstructed = (y for x in obstructed for y in csocha.neighbours(x))
 
         # Remove fields next to obstructed
         dests.difference_update(obstructed)
@@ -248,20 +238,20 @@ class GameState:
         if ownbee is None:
             own = 0
         else:
-            own = len(self.get_neighbours(ownbee).difference(empty))
+            own = len(set(csocha.neighbours(ownbee)).difference(empty))
 
         oppbee = self.bee(self.opp)
         if oppbee is None:
             opp = 0
         else:
-            opp = len(self.get_neighbours(oppbee).difference(empty))
+            opp = len(set(csocha.neighbours(oppbee)).difference(empty))
 
         return own == 6 or opp == 6 or self.turn >= 60
 
     def __hash__(self, depth=1):
         if self.turn > 7 and self.turn < 60 - depth:
-            return (self.board.__hash__() << 1) + (self.turn % 2)
-        return (self.board.__hash__() << 6) + self.turn
+            return csocha.hash(self.board.fields) + str(self.color).encode()
+        return csocha.hash(self.board.fields) + str(self.turn).encode()
 
 
 def parse(xml: ElementTree.Element) -> GameState:

@@ -1,37 +1,36 @@
 help:
-	@echo "run, build, pytest, flake8 and clean"
+	@echo "build, setup, setup-server and clean"
 
-setup-pip:
-	python -m pip install --upgrade pip
-
-setup-pytest: setup-server setup-pip
-	pip install pytest
-
-setup-flake8: setup-pip
-	pip install flake8
+setup:
+	pip install --upgrade pip
+	pip install pytest flake8
+	python setup.py install
 
 setup-server:
 	wget -O server.zip https://github.com/CAU-Kiel-Tech-Inf/socha/releases/latest/download/software-challenge-server.zip
 	unzip -u server.zip -d server
 	rm server.zip
 
-run:
-	python -m socha
-
-pytest: setup-pytest
+pytest: setup setup-server
+	@echo LEGACY: Will be removed in next version
 	pytest
 
-flake8: setup-flake8
+flake8: setup
+	@echo LEGACY: Will be removed in next version
 	flake8 socha
 
 clean:
 	rm -rf */*.pyc */__pycache__ .pytest_cache server.zip build socha.zip
 
 build: clean
-	python3.6 -c "import socha; from socha import __main__"
+	python setup.py install
+	python -c "import socha; from socha import __main__"
 	mkdir -p build/socha
 	cp socha/__pycache__/*.pyc build/socha
 	for x in build/socha/*;do mv $$x $${x%.cpython-36.pyc}.pyc;done
+	for x in build/socha/*;do mv $$x $${x%.cpython-37.pyc}.pyc;done
+	mv build/lib*/csocha* build/csocha.so
+	rm -r build/lib* build/temp*
 	echo "#!/bin/sh\npython -m socha \"\$$@\"" > build/run.sh
 	cd build; zip -r ../socha.zip *
 	rm -r build

@@ -71,7 +71,7 @@ class Client:
                     reason = set()
                     for score in tagdata.findall("score"):
                         reason.add(score.get("reason"))
-                    print("\n".join(reason))
+                    print(*[x + "\n" for x in reason])
                 else:
                     print(f"Unknown tag <room class=\"{tagclass}\">")
             elif tag.tag == "left":
