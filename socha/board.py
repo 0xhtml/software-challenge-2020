@@ -29,9 +29,6 @@ class Board:
         self.cache["color" + color] = positions
         return positions
 
-    def __hash__(self):
-        return hash(frozenset((x, *self.fields[x]) for x in self.nonempty()))
-
 
 def parse(xml: ElementTree.Element) -> Board:
     fields = {}
