@@ -100,37 +100,42 @@ static PyObject* hash(PyObject* self, PyObject* args){
 
     PyObject* keys = PyDict_Keys(fields);
     int len = (int)PyList_Size(keys);
-    char hash[len*5];
+    char hash[len];
     PyList_Sort(keys);
-    int size;
-    char *color, *type;
-    PyObject *key, *val, *piece;
+
+    Py_ssize_t size;
+    char *color, *type, val, overflow;
+    PyObject *pieces, *piece;
     for (Py_ssize_t i = 0; i < len; i++){
-        key = PyList_GetItem(keys, i);
-        val = PyDict_GetItem(fields, key);
-        size = (int)PyList_Size(val);
-        for (int layer = 0; layer < 5; layer++){
-            hash[layer * len + i] = 1;
-            if (layer < size) {
-                piece = PyList_GetItem(val, layer);
-                PyArg_ParseTuple(piece, "ss", &color, &type);
-                if (strcmp(type, "BEE") == 0){
-                    hash[layer * len + i] = (hash[layer * len + i] << 3);
-                } else if (strcmp(type, "BEETLE") == 0){
-                    hash[layer * len + i] = (hash[layer * len + i] << 3) + 1;
-                } else if (strcmp(type, "ANT") == 0){
-                    hash[layer * len + i] = (hash[layer * len + i] << 3) + 2;
-                } else if (strcmp(type, "GRASSHOPPER") == 0) {
-                    hash[layer * len + i] = (hash[layer * len + i] << 3) + 3;
-                } else if (strcmp(type, "SPIDER") == 0) {
-                    hash[layer * len + i] = (hash[layer * len + i] << 3) + 4;
-                }
-                if (strcmp(color, "RED") == 0){
-                    hash[layer * len + i] = hash[layer * len + i] << 1;
-                } else if (strcmp(color, "BLUE") == 0){
-                    hash[layer * len + i] = (hash[layer * len + i] << 1) + 1;
-                }
+        hash[i] = 1;
+
+        pieces = PyDict_GetItem(fields, PyList_GetItem(keys, i));
+        size = PyList_Size(pieces);
+
+        for (Py_ssize_t j = 0; j < size; j++){
+            piece = PyList_GetItem(pieces, j);
+            PyArg_ParseTuple(piece, "ss", &color, &type);
+
+            val = 1;
+            if (strcmp(type, "BEE") == 0){
+                val = val << 3;
+            } else if (strcmp(type, "BEETLE") == 0){
+                val = (val << 3) + 1;
+            } else if (strcmp(type, "ANT") == 0){
+                val = (val << 3) + 2;
+            } else if (strcmp(type, "GRASSHOPPER") == 0) {
+                val = (val << 3) + 3;
+            } else if (strcmp(type, "SPIDER") == 0) {
+                val = (val << 3) + 4;
             }
+            if (strcmp(color, "RED") == 0){
+                val = val << 1;
+            } else if (strcmp(color, "BLUE") == 0){
+                val = (val << 1) + 1;
+            }
+
+            overflow = hash[i] >> 4;
+            hash[i] = (hash[i] << 4) + val + overflow;
         }
     }
     Py_DECREF(keys);
