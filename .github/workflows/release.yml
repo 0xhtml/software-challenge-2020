@@ -21,7 +21,7 @@ jobs:
     - name: Build
       run: make build
     - name: Release
-      uses: action/create-release@v1.0.1
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
