@@ -1,0 +1,42 @@
+name: Test
+
+on: [pull_request]
+
+jobs:
+  pytest:
+    name: Test with pytest
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2.0.0
+    - name: Setup Python 3.7
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7
+    - name: Update pip
+      run: pip install --upgrade pip
+    - name: Install pytest
+      run: pip install pytest
+    - name: Install C++ extension
+      run: python setup.py install
+    - name: Setup server
+      run: make setup-server
+    - name: Test
+      run: pytest
+
+  flake8:
+    name: Lint with flake8
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2.0.0
+    - name: Setup Python 3.7
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7
+    - name: Update pip
+      run: pip install --upgrade pip
+    - name: Install flake8
+      run: pip install flake8
+    - name: Lint
+      run: flake8 socha
