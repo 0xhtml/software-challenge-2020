@@ -39,7 +39,7 @@ class SetMove(Move):
     def __str__(self) -> str:
         return f"SetMove({self.piece}, {self.dest})"
 
-    def hash(self, fields: dict):
+    def hash(self, _):
         return f"S_{self.piece[1]}_{self.dest[0]}_{self.dest[1]}"
 
 
@@ -82,5 +82,5 @@ class SkipMove(Move):
     def __str__(self) -> str:
         return f"SkipMove()"
 
-    def hash(self, fields: dict):
+    def hash(self, _):
         return "S"

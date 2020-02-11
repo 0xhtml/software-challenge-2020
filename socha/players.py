@@ -8,7 +8,7 @@ class AlphaBeta:
     tranpositions = {}
     history = {}
 
-    def alphaBeta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
+    def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Generate gamestate hash
         gshash = gs.hash(depth)
 
@@ -22,10 +22,10 @@ class AlphaBeta:
                 if transposition[1] == 0:
                     # Exact
                     return transposition[2]
-                elif transposition[1] == 1:
+                if transposition[1] == 1:
                     # Upper bound
                     b = min(transposition[2], b)
-                elif transposition[1] == 2:
+                if transposition[1] == 2:
                     # Lower bound
                     a = max(transposition[2], a)
 
@@ -56,7 +56,7 @@ class AlphaBeta:
             # Do move
             move.do(gs)
 
-            value = -self.alphaBeta(gs, depth - 1, -b, -a)
+            value = -self.alpha_beta(gs, depth - 1, -b, -a)
 
             # Undo move
             move.undo(gs)
@@ -84,7 +84,7 @@ class AlphaBeta:
         # Return value
         return a
 
-    def IDDFS(self, gamestate: gamestate.GameState):
+    def iddfs(self, gamestate: gamestate.GameState):
         # Reset timeout
         self.timeout = False
 
@@ -103,7 +103,7 @@ class AlphaBeta:
                 move.do(gamestate)
 
                 # Perform pvSearch
-                value = -self.alphaBeta(
+                value = -self.alpha_beta(
                     gamestate,
                     depth,
                     -math.inf,
@@ -151,7 +151,7 @@ class AlphaBeta:
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.clock()
 
-        move = self.IDDFS(gamestate)
+        move = self.iddfs(gamestate)
 
         print("t", round(time.clock() - self.now, 2))
         return move
