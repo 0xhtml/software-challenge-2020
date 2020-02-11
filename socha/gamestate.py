@@ -248,7 +248,7 @@ class GameState:
 
         return own == 6 or opp == 6 or self.turn >= 60
 
-    def __hash__(self, depth=1):
+    def hash(self, depth):
         if self.turn > 7 and self.turn < 60 - depth:
             return csocha.hash(self.board.fields) + str(self.color).encode()
         return csocha.hash(self.board.fields) + str(self.turn).encode()
