@@ -6,10 +6,11 @@ from . import gamestate, moves
 
 class AlphaBeta:
     tranpositions = {}
+    history = {}
 
     def alphaBeta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Generate gamestate hash
-        gshash = gs.__hash__(depth)
+        gshash = gs.hash(depth)
 
         # Check for transposition
         if gshash in self.tranpositions:
@@ -43,8 +44,15 @@ class AlphaBeta:
         # Save alpha for later use
         start_a = a
 
+        # Get possible moves sorted based on history
+        possible_moves = sorted(
+            gs.get_possible_moves(),
+            key=lambda x: self.history.get(x.hash(gs.board.fields), 0),
+            reverse=True
+        )
+
         # Go through all moves
-        for move in gs.get_possible_moves():
+        for move in possible_moves:
             # Do move
             move.do(gs)
 
@@ -59,6 +67,8 @@ class AlphaBeta:
 
             # Beta-cutoff
             if value >= b:
+                mhash = move.hash(gs.board.fields)
+                self.history[mhash] = self.history.get(mhash, 0) + (depth ** 2)
                 break
 
         if a <= start_a:

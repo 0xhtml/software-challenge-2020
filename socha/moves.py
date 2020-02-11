@@ -39,8 +39,8 @@ class SetMove(Move):
     def __str__(self) -> str:
         return f"SetMove({self.piece}, {self.dest})"
 
-    def __hash__(self):
-        return hash(self.piece + self.dest)
+    def hash(self, fields: dict):
+        return f"S_{self.piece[1]}_{self.dest[0]}_{self.dest[1]}"
 
 
 class DragMove(Move):
@@ -71,8 +71,8 @@ class DragMove(Move):
     def __str__(self) -> str:
         return f"DragMove({self.start}, {self.dest})"
 
-    def __hash__(self):
-        return hash(self.start + self.dest)
+    def hash(self, fields: dict):
+        return f"D_{fields[self.start][-1][1]}_{self.dest[0]}_{self.dest[1]}"
 
 
 class SkipMove(Move):
@@ -82,5 +82,5 @@ class SkipMove(Move):
     def __str__(self) -> str:
         return f"SkipMove()"
 
-    def __hash__(self):
-        return hash("SkipMove")
+    def hash(self, fields: dict):
+        return "S"
