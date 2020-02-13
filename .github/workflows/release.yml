@@ -12,10 +12,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2.0.0
-    - name: Setup Python 3.7
+    - name: Setup Python 3.8
       uses: actions/setup-python@v1.1.1
       with:
-        python-version: 3.7
+        python-version: 3.8
     - name: Install C++ extension
       run: python setup.py install
     - name: Build
