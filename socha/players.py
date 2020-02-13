@@ -34,7 +34,7 @@ class AlphaBeta:
                     return a
 
         # Check for timeout
-        if (time.clock() - self.now > 1.8):
+        if (time.time_ns() - self.now > 1900000000):
             self.timeout = True
 
         # If depth reached, end of game or timeout reached then stop
@@ -149,9 +149,9 @@ class AlphaBeta:
         return -len(set(csocha.neighbours(bee)).difference(empty))
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
-        self.now = time.clock()
+        self.now = time.time_ns()
 
         move = self.iddfs(gamestate)
 
-        print("t", round(time.clock() - self.now, 2))
+        print("t", round((time.time_ns() - self.now) / 1000000000, 2))
         return move
