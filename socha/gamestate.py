@@ -70,7 +70,7 @@ class GameState:
             opp = (y for x in opp for y in csocha.neighbours(x))
 
             # Only fields not next to opponent pieces
-            dests.difference_update(opp)
+            dests = dests.difference(opp)
 
         # When bee isn't set until fith turn player has to set bee
         if (self.turn > 5 and (self.color, "BEE") in self.undeployed):
@@ -162,7 +162,7 @@ class GameState:
         # Get fields next to fields
         dests = set()
         for neighbour in neighbours:
-            dests.symmetric_difference_update(csocha.neighbours(neighbour))
+            dests = dests.symmetric_difference(csocha.neighbours(neighbour))
 
         # Get obstructed fields
         obstructed = self.board.obstructed.copy()
@@ -174,7 +174,7 @@ class GameState:
         obstructed = (y for x in obstructed for y in csocha.neighbours(x))
 
         # Remove fields next to obstructed
-        dests.difference_update(obstructed)
+        dests = dests.difference(obstructed)
 
         # Only take fields in reach
         dests.intersection_update(all_neighbours)
@@ -193,8 +193,7 @@ class GameState:
                 y
                 for x in dests
                 for y in self.get_bee_move_dests(x, pos)
-            }
-            dests.difference_update(all_dests)
+            }.difference(all_dests)
             all_dests.update(dests)
         return dests
 
@@ -204,8 +203,7 @@ class GameState:
         while len(todo) > 0:
             dest = todo.pop()
             found.add(dest)
-            dests = self.get_bee_move_dests(dest, pos)
-            dests.difference_update(found)
+            dests = self.get_bee_move_dests(dest, pos).difference(found)
             todo.update(dests)
         found.discard(pos)
         return found
