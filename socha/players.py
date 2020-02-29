@@ -7,6 +7,7 @@ from . import gamestate, moves
 class AlphaBeta:
     tranpositions = {}
     history = {}
+    max_depth = 3
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Generate gamestate hash
@@ -96,7 +97,7 @@ class AlphaBeta:
         possible_moves = list(gamestate.get_possible_moves())
 
         # Do pvSearch while not timed out and depth under 20
-        while not self.timeout and depth < 3:
+        while not self.timeout and depth < self.max_depth:
             # Go through all moves
             for move in possible_moves:
                 # Do move
@@ -144,7 +145,7 @@ class AlphaBeta:
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
         bee = gamestate.bee(color)
         if bee is None:
-            return 0
+            return -2
         empty = gamestate.board.empty()
         return -len(set(csocha.neighbours(bee)).difference(empty))
 
