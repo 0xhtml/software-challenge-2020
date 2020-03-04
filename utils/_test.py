@@ -2,7 +2,6 @@ import os
 import sys
 import socket
 import subprocess
-import multiprocessing
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from socha import players, gamestate, board, net
 
@@ -52,11 +51,16 @@ def create_gamestate() -> gamestate.GameState:
     return gamestate.GameState("RED", 0, _board, undep)
 
 
-def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, start: bool) -> tuple:
+def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, x, start: bool) -> tuple:
     _gamestate = create_gamestate()
 
     redp = red() if start else blue()
     bluep = blue() if start else red()
+
+    if start:
+        redp.x = x
+    else:
+        bluep.x = x
 
     while True:
         move = redp.get(_gamestate)
@@ -65,11 +69,11 @@ def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, start: bool) -> t
         move = bluep.get(_gamestate)
         move.do(_gamestate)
 
-        if _gamestate.game_ended() or _gamestate.turn > 10:
+        if _gamestate.game_ended():
             break
 
     _gamestate.color = "RED" if start else "BLUE"
-    _gamestate.opp = "BLUE" if start else "RED"
+    _gamestate.opponent = "BLUE" if start else "RED"
     return players.AlphaBeta().evaluate(_gamestate)
 
 
@@ -116,20 +120,6 @@ def run_server(player: players.AlphaBeta, start: bool) -> tuple:
 
 
 def test(count: int, func, args: tuple) -> tuple:
-    p = multiprocessing.Pool(4)
-    ps = []
-    evals = []
-
-    for i in range(count):
-        ps.append(p.apply_async(func, args + (bool(i % 2),), callback=evals.append))
-    for p in ps:
-        p.wait()
-
-    wins = [1 if x > 0 else 0 if x < 0 else 0.5 for x in evals]
-    return sum(evals) / len(evals), sum(wins) / len(wins)
-
-
-def test_no_threading(count: int, func, args: tuple) -> tuple:
     evals = []
 
     for i in range(count):
