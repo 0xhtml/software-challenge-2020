@@ -7,32 +7,31 @@ from . import board, moves
 class GameState:
     def __init__(self, c: str, t: int, b: board.Board, undep: list):
         self.color = c
-        self.opp = "BLUE" if c == "RED" else "RED"
+        self.opponent = "BLUE" if c == "RED" else "RED"
         self.turn = t
         self.board = b
         self.undeployed = undep
-        self.directions = [
-            (1, 0),
-            (1, -1),
-            (0, -1),
-            (-1, 0),
-            (-1, 1),
-            (0, 1)
-        ]
 
     def is_connected(self, fields: set) -> bool:
-        next = {fields.pop()}
-        while len(next) > 0:
-            next = {y for x in next for y in csocha.neighbours(x)}
-            next.intersection_update(fields)
-            fields.difference_update(next)
+        visited = [fields.pop()]
+        while len(visited) > 0:
+            neighbours = fields.intersection(csocha.neighbours(visited.pop(0)))
+            fields.difference_update(neighbours)
+            visited.extend(neighbours)
         return len(fields) == 0
 
     def get_possible_moves(self) -> set:
+        # Get possible set moves
         possible_moves = self.get_possible_set_moves()
+
+        # Add possible drag moves
         possible_moves.update(self.get_possible_drag_moves())
+
+        # If no move is possible, add skip move
         if len(possible_moves) == 0:
             possible_moves.add(moves.SkipMove())
+
+        # Return possible moves
         return possible_moves
 
     def get_possible_set_moves(self) -> set:
@@ -44,13 +43,10 @@ class GameState:
         # Second turn
         elif self.turn == 1:
             # Get first set piece
-            field = self.board.color(self.opp).__iter__().__next__()
+            field = self.board.color(self.opponent).__iter__().__next__()
 
-            # Get empty fields
-            dests = set(self.board.empty())
-
-            # Only neighbours of piece
-            dests.intersection_update(csocha.neighbours(field))
+            # Get empty fields next to first piece
+            dests = self.board.empty().intersection(csocha.neighbours(field))
 
         # All other turns
         else:
@@ -64,15 +60,15 @@ class GameState:
             dests.intersection_update(self.board.empty())
 
             # Get opponent pieces
-            opp = self.board.color(self.opp)
+            opponent = self.board.color(self.opponent)
 
             # Get neighbours of opponent pieces
-            opp = (y for x in opp for y in csocha.neighbours(x))
+            opponent = {y for x in opponent for y in csocha.neighbours(x)}
 
             # Only fields not next to opponent pieces
-            dests = dests.difference(opp)
+            dests = dests.difference(opponent)
 
-        # When bee isn't set until fith turn player has to set bee
+        # If bee isn't set until fith turn player has to set bee
         if (self.turn > 5 and (self.color, "BEE") in self.undeployed):
             types = {"BEE"}
         else:
@@ -93,35 +89,38 @@ class GameState:
         possible_moves = set()
 
         # Loop through all set pieces
-        for pos in self.board.color(self.color):
+        for position in self.board.color(self.color):
             # When there is no piece under piece
-            if len(self.board.fields[pos]) == 1:
+            if len(self.board.fields[position]) == 1:
                 # Get all set pieces
                 fields = set(self.board.nonempty())
 
                 # Remove piece that is being dragged
-                fields.discard(pos)
+                fields.discard(position)
 
-                # Skip if dragging pieces results in disconnection
+                # Skip if dragging piece results in disconnection
                 if not self.is_connected(fields):
                     continue
+            else:
+                # Piece is stacked therefore has to be a beetle
+                dests = self.get_beetle_move_dests(position)
 
             # Call function to get piece type specific destinations
-            if self.board.fields[pos][-1][1] == "BEETLE":
-                dests = self.get_beetle_move_dests(pos)
-            elif self.board.fields[pos][-1][1] == "BEE":
-                dests = self.get_bee_move_dests(pos, pos)
-            elif self.board.fields[pos][-1][1] == "SPIDER":
-                dests = self.get_spider_move_dests(pos)
-            elif self.board.fields[pos][-1][1] == "ANT":
-                dests = self.get_ant_move_dests(pos)
-            elif self.board.fields[pos][-1][1] == "GRASSHOPPER":
-                dests = self.get_grasshopper_move_dests(pos)
+            if self.board.fields[position][-1][1] == "BEETLE":
+                dests = self.get_beetle_move_dests(position)
+            elif self.board.fields[position][-1][1] == "BEE":
+                dests = self.get_bee_move_dests(position, position)
+            elif self.board.fields[position][-1][1] == "SPIDER":
+                dests = self.get_spider_move_dests(position)
+            elif self.board.fields[position][-1][1] == "ANT":
+                dests = self.get_ant_move_dests(position)
+            elif self.board.fields[position][-1][1] == "GRASSHOPPER":
+                dests = self.get_grasshopper_move_dests(position)
             else:
                 continue
 
             # Add all destinations to possible_moves
-            possible_moves.update(moves.DragMove(pos, x) for x in dests)
+            possible_moves.update(moves.DragMove(position, x) for x in dests)
 
         # Return possible moves
         return possible_moves
@@ -210,7 +209,7 @@ class GameState:
 
     def get_grasshopper_move_dests(self, pos: tuple) -> set:
         dests = set()
-        for direction in self.directions:
+        for direction in [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)]:
             dest = (pos[0] + direction[0], pos[1] + direction[1])
             if dest in self.board.empty():
                 continue
@@ -220,33 +219,45 @@ class GameState:
         dests.intersection_update(self.board.empty())
         return dests
 
-    def bee(self, color: str) -> tuple:
-        for field, pieces in self.board.fields.items():
-            for piece in pieces:
-                if piece == (color, "BEE"):
-                    return field
+    def get_bee(self, color: str) -> tuple:
+        # Loop through all fields
+        for position, pieces in self.board.fields.items():
+            # If bee is on this field return it
+            if len(pieces) > 0 and pieces[0] == (color, "BEE"):
+                return position
+
+        # Bee is not set jet, return none
         return None
 
     def game_ended(self):
+        # Game can only end if color is blue
         if self.color != "RED":
             return False
+
+        # Get empty fields for use later
         empty = self.board.empty()
 
-        ownbee = self.bee(self.color)
-        if ownbee is None:
-            own = 0
-        else:
-            own = len(set(csocha.neighbours(ownbee)).difference(empty))
+        # Get own bee
+        ownbee = self.get_bee(self.color)
 
-        oppbee = self.bee(self.opp)
-        if oppbee is None:
-            opp = 0
-        else:
-            opp = len(set(csocha.neighbours(oppbee)).difference(empty))
+        # If own bee is set
+        if ownbee is not None:
+            # If own bee has been surrounded, game has ended
+            if len(set(csocha.neighbours(ownbee)).difference(empty)) == 6:
+                return True
 
-        return own == 6 or opp == 6 or self.turn >= 60
+        # Get opponent bee
+        oppbee = self.get_bee(self.opponent)
+        # If opponent bee is set
+        if oppbee is not None:
+            # If opponent bee has been surrounded, game has ended
+            if len(set(csocha.neighbours(oppbee)).difference(empty)) == 6:
+                return True
 
-    def hash(self, depth):
+        # If turn limit is reach, game has ended
+        return self.turn >= 60
+
+    def hash(self, depth: int) -> bytes:
         if self.turn > 7 and self.turn < 60 - depth:
             return csocha.hash(self.board.fields) + str(self.color).encode()
         return csocha.hash(self.board.fields) + str(self.turn).encode()

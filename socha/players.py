@@ -139,11 +139,11 @@ class AlphaBeta:
 
     def evaluate(self, gamestate: gamestate.GameState):
         val = self.evaluate_single(gamestate, gamestate.color)
-        val -= self.evaluate_single(gamestate, gamestate.opp)
+        val -= self.evaluate_single(gamestate, gamestate.opponent)
         return val
 
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
-        bee = gamestate.bee(color)
+        bee = gamestate.get_bee(color)
         if bee is None:
             return -2
         empty = gamestate.board.empty()

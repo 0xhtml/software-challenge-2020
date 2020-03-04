@@ -59,19 +59,20 @@ class Client:
                 elif tagclass == "sc.framework.plugins.protocol.MoveRequest":
                     self.send_move(self.player.get(self.gamestate))
                 elif tagclass == "error":
-                    self.send("<sc.protocol.responses.CloseConnection />")
-                    self.send("</protocol>")
-                    raise Exception(tagdata.get("message"))
+                    print("ERROR", tagdata.get("message"))
                 elif tagclass == "result":
                     tagwinner = tagdata.find("winner")
                     if tagwinner is None:
                         print("No body won the game!")
                     else:
                         print(f"{tagwinner.get('color')} won the game!")
-                    reason = set()
+                    reasons = []
                     for score in tagdata.findall("score"):
-                        reason.add(score.get("reason"))
-                    print(*[x + "\n" for x in reason])
+                        reason = score.get("reason")
+                        if reason is None:
+                            continue
+                        reasons.append(reason)
+                    print(*[x + "\n" for x in reasons], end="")
                 else:
                     print(f"Unknown tag <room class=\"{tagclass}\">")
             elif tag.tag == "left":
