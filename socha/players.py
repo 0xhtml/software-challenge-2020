@@ -144,7 +144,7 @@ class AlphaBeta:
 
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
         empty = gamestate.board.empty()
-        nonempty = gamestate.board.nonempty()
+        nonempty = set(gamestate.board.nonempty())
         bee = (color, "BEE")
 
         value = 0
