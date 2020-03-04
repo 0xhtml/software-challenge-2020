@@ -7,6 +7,7 @@ from . import gamestate, moves
 class AlphaBeta:
     tranpositions = {}
     history = {}
+    max_depth = 3
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Generate gamestate hash
@@ -96,7 +97,7 @@ class AlphaBeta:
         possible_moves = list(gamestate.get_possible_moves())
 
         # Do pvSearch while not timed out and depth under 20
-        while not self.timeout and depth < 3:
+        while not self.timeout and depth < self.max_depth:
             # Go through all moves
             for move in possible_moves:
                 # Do move
@@ -138,15 +139,48 @@ class AlphaBeta:
 
     def evaluate(self, gamestate: gamestate.GameState):
         val = self.evaluate_single(gamestate, gamestate.color)
-        val -= self.evaluate_single(gamestate, gamestate.opp)
+        val -= self.evaluate_single(gamestate, gamestate.opponent)
         return val
 
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
-        bee = gamestate.bee(color)
-        if bee is None:
-            return 0
         empty = gamestate.board.empty()
-        return -len(set(csocha.neighbours(bee)).difference(empty))
+        nonempty = set(gamestate.board.nonempty())
+        bee = (color, "BEE")
+
+        value = 0
+
+        bee_is_not_set = True
+        for position, pieces in gamestate.board.fields.items():
+            pieces_len = len(pieces)
+
+            if pieces_len == 0:
+                continue
+
+            this_is_bee = bee_is_not_set and pieces[0] == bee
+            if this_is_bee:
+                bee_is_not_set = False
+
+            this_is_dragable = (
+                pieces[-1][0] == color and (
+                    pieces_len > 1 or
+                    gamestate.is_connected(
+                        nonempty.difference({position})
+                    )
+                )
+            )
+
+            if this_is_bee or this_is_dragable:
+                for neighbour in csocha.neighbours(position):
+                    if neighbour in empty:
+                        if this_is_dragable:
+                            value += 1/4
+                    elif this_is_bee:
+                        value -= 1
+
+        if bee_is_not_set:
+            value -= 2
+
+        return value
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.time_ns()
