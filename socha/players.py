@@ -143,11 +143,44 @@ class AlphaBeta:
         return val
 
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
-        bee = gamestate.get_bee(color)
-        if bee is None:
-            return -2
         empty = gamestate.board.empty()
-        return -len(set(csocha.neighbours(bee)).difference(empty))
+        nonempty = gamestate.board.nonempty()
+        bee = (color, "BEE")
+
+        value = 0
+
+        bee_is_not_set = True
+        for position, pieces in gamestate.board.fields.items():
+            pieces_len = len(pieces)
+
+            if pieces_len == 0:
+                continue
+
+            this_is_bee = bee_is_not_set and pieces[0] == bee
+            if this_is_bee:
+                bee_is_not_set = False
+
+            this_is_dragable = (
+                pieces[-1][0] == color and (
+                    pieces_len > 1 or
+                    gamestate.is_connected(
+                        nonempty.difference({position})
+                    )
+                )
+            )
+
+            if this_is_bee or this_is_dragable:
+                for neighbour in csocha.neighbours(position):
+                    if neighbour in empty:
+                        if this_is_dragable:
+                            value += 1/6
+                    elif this_is_bee:
+                        value -= 1
+
+        if bee_is_not_set:
+            value -= 2
+
+        return value
 
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.time_ns()
