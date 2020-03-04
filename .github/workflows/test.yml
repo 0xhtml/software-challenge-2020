@@ -22,7 +22,7 @@ jobs:
     - name: Setup server
       run: make setup-server
     - name: Test
-      run: pytest
+      run: pytest tests
 
   flake8:
     name: Lint with flake8
