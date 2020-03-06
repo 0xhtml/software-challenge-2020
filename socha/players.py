@@ -175,7 +175,7 @@ class AlphaBeta:
                 for neighbour in csocha.neighbours(position):
                     if neighbour in empty:
                         if this_is_dragable:
-                            value += 1/4
+                            value += 1/7
                     elif this_is_bee:
                         value -= 1
 
