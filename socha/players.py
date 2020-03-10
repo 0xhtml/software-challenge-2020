@@ -6,7 +6,6 @@ from . import gamestate, moves
 
 class AlphaBeta:
     tranpositions = {}
-    history = {}
     max_depth = 3
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
@@ -86,8 +85,9 @@ class AlphaBeta:
         return a
 
     def iddfs(self, gamestate: gamestate.GameState):
-        # Reset timeout
+        # Reset timeout and history
         self.timeout = False
+        self.history = {}
 
         # Set initial values
         depth = 0
