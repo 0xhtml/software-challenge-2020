@@ -9,6 +9,11 @@ class AlphaBeta:
     max_depth = 3
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
+        # Check for timeout
+        if (time.time_ns() - self.now > 1900000000):
+            self.timeout = True
+            return 0
+
         # Generate gamestate hash
         gshash = gs.hash(depth)
 
@@ -33,12 +38,8 @@ class AlphaBeta:
                 if a > b:
                     return a
 
-        # Check for timeout
-        if (time.time_ns() - self.now > 1900000000):
-            self.timeout = True
-
-        # If depth reached, end of game or timeout reached then stop
-        if (depth <= 0 or gs.game_ended() or self.timeout):
+        # If depth reached or end of game then stop
+        if (depth <= 0 or gs.game_ended()):
             return self.evaluate(gs)
 
         # Save alpha for later use
