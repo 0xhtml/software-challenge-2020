@@ -2,6 +2,7 @@ import os
 import sys
 import socket
 import subprocess
+import random
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from socha import players, gamestate, board, net
 
@@ -47,7 +48,12 @@ def create_gamestate() -> gamestate.GameState:
             ys = range(-5 - x, 6)
         for y in ys:
             fields[(x, y)] = []
-    _board = board.Board(fields, set())
+    obstructed = set()
+    for _ in range(3):
+        pos = random.choice(fields.keys())
+        del fields[pos]
+        obstructed.add(pos)
+    _board = board.Board(fields, obstructed)
     return gamestate.GameState("RED", 0, _board, undep)
 
 
