@@ -162,8 +162,6 @@ class AlphaBeta:
 
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
         empty = gamestate.board.empty()
-        nonempty = set(gamestate.board.nonempty())
-        only_one_set = len(nonempty) <= 1
         bee = (color, "BEE")
 
         value = 0
@@ -182,10 +180,7 @@ class AlphaBeta:
             this_is_dragable = (
                 pieces[-1][0] == color and (
                     pieces_len > 1 or
-                    only_one_set or
-                    gamestate.is_connected(
-                        nonempty.difference({position})
-                    )
+                    gamestate.can_be_disconnected(position)
                 )
             )
 
