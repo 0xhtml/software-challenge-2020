@@ -50,7 +50,7 @@ def create_gamestate() -> gamestate.GameState:
             fields[(x, y)] = []
     obstructed = set()
     for _ in range(3):
-        pos = random.choice(fields.keys())
+        pos = random.choice(list(fields.keys()))
         del fields[pos]
         obstructed.add(pos)
     _board = board.Board(fields, obstructed)
