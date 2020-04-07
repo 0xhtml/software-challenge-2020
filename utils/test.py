@@ -1,6 +1,5 @@
 import _test
 from random import choice
-from multiprocessing import Pool
 from matplotlib import pyplot
 
 
@@ -15,16 +14,9 @@ class B(_test.players.AlphaBeta):
         return choice(list(gamestate.get_possible_moves()))
 
 
-def run(x):
-    return _test.test(30, _test.run_local, (A, B, x))
-
-
 if __name__ == '__main__':
-    pool = Pool(3)
+    x = [0, 7, 8, 9, 10, 11, 12, 13, 14]
 
-    x = [1, 2, 3]
-
-    pyplot.plot(x, pool.map(run, x))
+    data = _test.test(40, x, _test.run_server, (A,))
+    pyplot.plot(x, data)
     pyplot.show()
-
-    pool.close()

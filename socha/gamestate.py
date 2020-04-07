@@ -20,6 +20,15 @@ class GameState:
             visited.extend(neighbours)
         return len(fields) == 0
 
+    def can_be_disconnected(self, piece: set) -> bool:
+        nonempty = self.board.nonempty()
+        if len(nonempty) == 1:
+            return True
+        neighbours = csocha.neighbours(piece)
+        if len(nonempty.intersection(neighbours)) < 2:
+            return True
+        return self.is_connected(set(nonempty).difference({piece}))
+
     def get_possible_moves(self) -> set:
         # Get possible set moves
         possible_moves = self.get_possible_set_moves()
@@ -92,14 +101,7 @@ class GameState:
         for position in self.board.color(self.color):
             # When there is no piece under piece
             if len(self.board.fields[position]) == 1:
-                # Get all set pieces
-                fields = set(self.board.nonempty())
-
-                # Remove piece that is being dragged
-                fields.discard(position)
-
-                # Skip if dragging piece results in disconnection
-                if not self.is_connected(fields):
+                if not self.can_be_disconnected(position):
                     continue
             else:
                 # Piece is stacked therefore has to be a beetle
