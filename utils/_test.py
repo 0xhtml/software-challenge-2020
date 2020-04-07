@@ -3,6 +3,8 @@ import sys
 import socket
 import subprocess
 import random
+import threading
+from multiprocessing import Queue
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from socha import players, gamestate, board, net
 
@@ -86,7 +88,7 @@ def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, x, start: bool) -
 def popen(cmd: str) -> subprocess.Popen:
     p = subprocess.Popen(
         cmd.split(),
-        cwd="../server",
+        cwd="server",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
@@ -97,7 +99,7 @@ def popen(cmd: str) -> subprocess.Popen:
         return p
 
 
-def run_server(player: players.AlphaBeta, start: bool) -> tuple:
+def run_server(player: players.AlphaBeta, x: int, i: int) -> tuple:
     s = socket.socket()
     s.connect(("localhost", 13050))
     s.send(b"""<protocol>
@@ -110,26 +112,62 @@ def run_server(player: players.AlphaBeta, start: bool) -> tuple:
     a = r[2][r[2].find("<reservation>")+13:][:36]
     b = r[3][r[3].find("<reservation>")+13:][:36]
 
-    p = popen("java -jar 1.jar -r " + (b if start else a))
+    p = popen("java -jar " + str(int(i % 4 > 1)) + ".jar -r " + (b if i % 2 else a))
 
     s.close()
     try:
         client = net.Client("localhost", 13050)
         client.player = player()
-        client.join_reservation(a if start else b)
+        client.player.x = x
+        client.join_reservation(a if i % 2 else b)
     finally:
         p.kill()
 
-    client.gamestate.color = "RED" if start else "BLUE"
-    client.gamestate.opp = "BLUE" if start else "RED"
+    client.gamestate.color = "RED" if i % 2 else "BLUE"
+    client.gamestate.opp = "BLUE" if i % 2 else "RED"
     return players.AlphaBeta().evaluate(client.gamestate)
 
 
-def test(count: int, func, args: tuple) -> tuple:
-    evals = []
+def worker(work: Queue, data: Queue, func, args: tuple):
+    while not work.empty():
+        _work = work.get()
+        try:
+            _data = func(*(args + _work))
+            data.put((_data, _work[0]))
+        except Exception as e:
+            print(e)
 
-    for i in range(count):
-        evals.append(func(*(args + (bool(i % 2),))))
 
-    wins = [1 if x > 0 else 0 if x < 0 else 0.5 for x in evals]
-    return sum(evals) / len(evals), sum(wins) / len(wins)
+def test(count: int, x, func, args: tuple) -> tuple:
+    work = Queue()
+    for y in x:
+        for i in range(count):
+            work.put((y, i))
+
+    data = Queue()
+    threads = []
+    for _ in range(4):
+        thread = threading.Thread(target=worker, args=(work, data, func, args))
+        threads.append(thread)
+        thread.start()
+
+    i = 0
+    evals = {y: [] for y in x}
+    xcount = len(x) * count
+    while not work.empty() or not data.empty():
+        print("[" + ("=" * round(i / xcount * 100)) + ">" + (" " * (100 - round(i / xcount * 100))) + "]", end="\r")
+        _data = data.get()
+        evals[_data[1]].append(_data[0])
+        f = open("data.txt", "w")
+        f.write(str(evals))
+        f.close()
+        i += 1
+
+    for thread in threads:
+        thread.join()
+
+    while not data.empty():
+        _data = data.get()
+        evals[_data[1]].append(_data[0])
+
+    return [(sum(evals[y]) / len(evals[y]), sum([1 if x > 0 else 0 if x < 0 else 0.5 for x in evals[y]]) / len(evals[y])) for y in x]
