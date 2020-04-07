@@ -5,8 +5,8 @@ from . import gamestate, moves
 
 
 class AlphaBeta:
-    tranpositions = {}
-    max_depth = 10
+    transpositions = {}
+    max_depth = 4
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Check for timeout
@@ -18,9 +18,9 @@ class AlphaBeta:
         gshash = gs.hash(depth)
 
         # Check for transposition
-        if gshash in self.tranpositions:
+        if gshash in self.transpositions:
             # Get transposition
-            transposition = self.tranpositions[gshash]
+            transposition = self.transpositions[gshash]
 
             # Check transposition depth
             if transposition[0] >= depth:
@@ -74,13 +74,13 @@ class AlphaBeta:
 
         if a <= start_a:
             # Insert into transposition table as upper bound
-            self.tranpositions[gshash] = (depth, 1, a)
+            self.transpositions[gshash] = (depth, 1, a)
         elif a > b:
             # Insert into transposition table as lower bound
-            self.tranpositions[gshash] = (depth, 2, a)
+            self.transpositions[gshash] = (depth, 2, a)
         else:
             # Insert into transposition table as exact
-            self.tranpositions[gshash] = (depth, 0, a)
+            self.transpositions[gshash] = (depth, 0, a)
 
         # Return value
         return a
@@ -190,10 +190,10 @@ class AlphaBeta:
                         if this_is_dragable:
                             value += 1
                     elif this_is_bee:
-                        value -= 7
+                        value -= 10
 
         if bee_is_not_set:
-            value -= 14
+            value -= 20
 
         return value
 
