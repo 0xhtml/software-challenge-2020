@@ -175,6 +175,8 @@ class AlphaBeta:
 
             this_is_bee = bee_is_not_set and pieces[0] == bee
             if this_is_bee:
+                if pieces[-1][1] == "BEETLE" and pieces[-1][0] != color:
+                    value -= 4
                 bee_is_not_set = False
 
             this_is_dragable = (
@@ -191,6 +193,13 @@ class AlphaBeta:
                             value += 1
                     elif this_is_bee:
                         value -= 10
+                        if neighbour in gamestate.board.fields:
+                            piece = gamestate.board.fields[neighbour][-1]
+                            if piece[1] == "BEETLE":
+                                if piece[0] == color:
+                                    value += 2
+                                else:
+                                    value -= 2
 
         if bee_is_not_set:
             value -= 20
