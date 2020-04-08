@@ -6,7 +6,7 @@ from . import gamestate, moves
 
 class AlphaBeta:
     transpositions = {}
-    max_depth = 4
+    max_depth = 5
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Check for timeout

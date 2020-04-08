@@ -56,7 +56,12 @@ def create_gamestate() -> gamestate.GameState:
         del fields[pos]
         obstructed.add(pos)
     _board = board.Board(fields, obstructed)
-    return gamestate.GameState("RED", 0, _board, undep)
+    _gamestate = gamestate.GameState("RED", 0, _board, undep)
+    # moves.SetMove(("RED", "BEE"), (-4, 0)).do(_gamestate)
+    # moves.SetMove(("BLUE", "BEE"), (-4, -1)).do(_gamestate)
+    # moves.SetMove(("RED", "SPIDER"), (-4, 1)).do(_gamestate)
+    # moves.DragMove((-4, -1), (-3, -1)).do(_gamestate)
+    return _gamestate
 
 
 def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, x, start: bool) -> tuple:
@@ -82,7 +87,7 @@ def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, x, start: bool) -
 
     _gamestate.color = "RED" if start else "BLUE"
     _gamestate.opponent = "BLUE" if start else "RED"
-    return players.AlphaBeta().evaluate(_gamestate)
+    return players.AlphaBeta().evaluate(_gamestate), _gamestate.turn
 
 
 def popen(cmd: str) -> subprocess.Popen:
@@ -135,7 +140,7 @@ def worker(work: Queue, data: Queue, func, args: tuple):
             _data = func(*(args + _work))
             data.put((_data, _work[0]))
         except Exception as e:
-            print(e)
+            print(e.with_traceback())
 
 
 def test(count: int, x, func, args: tuple) -> tuple:
@@ -152,22 +157,26 @@ def test(count: int, x, func, args: tuple) -> tuple:
         thread.start()
 
     i = 0
-    evals = {y: [] for y in x}
+    xdata = {y: [] for y in x}
     xcount = len(x) * count
     while not work.empty() or not data.empty():
         print("[" + ("=" * round(i / xcount * 100)) + ">" + (" " * (100 - round(i / xcount * 100))) + "]", end="\r")
         _data = data.get()
-        evals[_data[1]].append(_data[0])
+        xdata[_data[1]].append(_data[0])
         f = open("data.txt", "w")
-        f.write(str(evals))
+        f.write(str(xdata))
         f.close()
         i += 1
 
     for thread in threads:
         thread.join()
+        i += 1
+        print("[" + ("=" * round(i / xcount * 100)) + ">" + (" " * (100 - round(i / xcount * 100))) + "]", end="\r")
 
     while not data.empty():
         _data = data.get()
-        evals[_data[1]].append(_data[0])
+        xdata[_data[1]].append(_data[0])
 
-    return [(sum(evals[y]) / len(evals[y]), sum([1 if x > 0 else 0 if x < 0 else 0.5 for x in evals[y]]) / len(evals[y])) for y in x]
+    evals = {y: [z[0] for z in xdata[y]] for y in x}
+    turns = {y: [z[1] for z in xdata[y]] for y in x}
+    return [(sum(evals[y]) / len(evals[y]), sum(turns[y]) / len(turns[y]), sum([1 if x > 0 else 0 if x < 0 else 0.5 for x in evals[y]]) / len(evals[y])) for y in x]

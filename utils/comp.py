@@ -11,9 +11,11 @@ class random(players.AlphaBeta):
 if __name__ == "__main__":
     gamestate = create_gamestate()
     a = players.AlphaBeta()
-    b = players.MTDf()
+    b = players.MinMax()
     while not gamestate.game_ended():
         print(a.get(gamestate))
-        print(b.get(gamestate))
-        print()
+        m = b.get(gamestate)
+        print(m)
+        input()
+        m.do(gamestate)
         random().get(gamestate).do(gamestate)
