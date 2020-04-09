@@ -85,28 +85,6 @@ class AlphaBeta:
         # Return value
         return a
 
-    def mtdf(self, gamestate: gamestate.GameState, f: int, depth: int):
-        # Set bounds
-        upperbound = math.inf
-        lowerbound = -math.inf
-
-        # Run alpha beta until timeout is reached or value is found
-        while lowerbound < upperbound and not self.timeout:
-            # Calculate beta
-            beta = f + int(f == lowerbound)
-
-            # Run alpha beta with null window
-            f = -self.alpha_beta(gamestate, depth, -beta-1, -beta)
-
-            # Set bounds
-            if f < beta:
-                upperbound = f
-            else:
-                lowerbound = f
-
-        # Return value
-        return f
-
     def iddfs(self, gamestate: gamestate.GameState):
         # Reset timeout and history
         self.timeout = False
@@ -119,15 +97,15 @@ class AlphaBeta:
         # Get all possible moves
         possible_moves = list(gamestate.get_possible_moves())
 
-        # Do MTD(f) while not timed out and depth under max depth
+        # Do AlphaBeta while not timed out and depth under max depth
         while not self.timeout and depth < self.max_depth:
             # Go through all moves
             for move in possible_moves:
                 # Do move
                 move.do(gamestate)
 
-                # Perform MTD(f)
-                value = self.mtdf(gamestate, values.get(move, 0), depth)
+                # Perform AlphaBeta
+                value = -self.alpha_beta(gamestate, depth, -math.inf, math.inf)
 
                 # Undo move
                 move.undo(gamestate)
@@ -150,6 +128,10 @@ class AlphaBeta:
             depth += 1
 
         # Log info
+        print(*[
+            "{:3d} {}".format(values.get(m), str(m))
+            for m in possible_moves
+        ], sep="\n")
         print("d", depth, "e", values.get(possible_moves[0]), end=" ")
 
         # Return best move
