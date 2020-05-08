@@ -14,7 +14,7 @@ def noprint(*a, **b):
     pass
 
 
-# players.print = noprint
+players.print = noprint
 net.print = noprint
 
 
