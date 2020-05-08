@@ -4,44 +4,33 @@ import socket
 import subprocess
 import random
 import threading
+import csocha
 from multiprocessing import Queue
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from socha import players, gamestate, board, net
+from socha import players, gamestate, board, net, moves
 
 
 def noprint(*a, **b):
     pass
 
 
-players.print = noprint
+# players.print = noprint
 net.print = noprint
 
 
-def create_gamestate() -> gamestate.GameState:
+def create_gamestate(obstructed=set()) -> gamestate.GameState:
     undep = [
-        ("RED", "BEE"),
-        ("RED", "SPIDER"),
-        ("RED", "SPIDER"),
-        ("RED", "SPIDER"),
-        ("RED", "GRASSHOPPER"),
-        ("RED", "GRASSHOPPER"),
-        ("RED", "BEETLE"),
-        ("RED", "BEETLE"),
-        ("RED", "ANT"),
-        ("RED", "ANT"),
-        ("RED", "ANT"),
-        ("BLUE", "BEE"),
-        ("BLUE", "SPIDER"),
-        ("BLUE", "SPIDER"),
-        ("BLUE", "SPIDER"),
-        ("BLUE", "GRASSHOPPER"),
-        ("BLUE", "GRASSHOPPER"),
-        ("BLUE", "BEETLE"),
-        ("BLUE", "BEETLE"),
-        ("BLUE", "ANT"),
-        ("BLUE", "ANT"),
-        ("BLUE", "ANT"),
+        (color, piece)
+        for color in ["RED", "BLUE"]
+        for piece in [
+            "BEE",
+            "SPIDER", "SPIDER", "SPIDER",
+            "GRASSHOPPER", "GRASSHOPPER",
+            "BEETLE", "BEETLE",
+            "ANT", "ANT", "ANT"
+        ]
     ]
+
     fields = {}
     for x in range(-5, 6):
         if x >= 0:
@@ -50,30 +39,38 @@ def create_gamestate() -> gamestate.GameState:
             ys = range(-5 - x, 6)
         for y in ys:
             fields[(x, y)] = []
-    obstructed = set()
-    for _ in range(3):
+
+    while len(obstructed) < 3:
         pos = random.choice(list(fields.keys()))
         del fields[pos]
         obstructed.add(pos)
+
     _board = board.Board(fields, obstructed)
-    _gamestate = gamestate.GameState("RED", 0, _board, undep)
-    # moves.SetMove(("RED", "BEE"), (-4, 0)).do(_gamestate)
-    # moves.SetMove(("BLUE", "BEE"), (-4, -1)).do(_gamestate)
-    # moves.SetMove(("RED", "SPIDER"), (-4, 1)).do(_gamestate)
-    # moves.DragMove((-4, -1), (-3, -1)).do(_gamestate)
-    return _gamestate
+    return gamestate.GameState("RED", 0, _board, undep)
 
 
-def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, x, start: bool) -> tuple:
+class Random(players.AlphaBeta):
+    def get(self, gamestate: gamestate.GameState) -> moves.Move:
+        return random.choice(list(gamestate.get_possible_moves()))
+
+
+def evaluate(gamestate: gamestate.GameState, color: str) -> int:
+    empty = gamestate.board.empty()
+    ownbee = gamestate.get_bee(color) or (7, 7)
+    own = set(csocha.neighbours(ownbee)).intersection(empty)
+    oppcolor = "BLUE" if color == "RED" else "RED"
+    oppbee = gamestate.get_bee(oppcolor) or (7, 7)
+    opp = set(csocha.neighbours(oppbee)).intersection(empty)
+    return len(own) - len(opp)
+
+
+def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, x, i: int):
     _gamestate = create_gamestate()
 
-    redp = red() if start else blue()
-    bluep = blue() if start else red()
-
-    if start:
-        redp.x = x
-    else:
-        bluep.x = x
+    redp = red() if i % 2 else blue()
+    bluep = blue() if i % 2 else red()
+    redp.x = x
+    bluep.x = x
 
     while True:
         move = redp.get(_gamestate)
@@ -85,9 +82,9 @@ def run_local(red: players.AlphaBeta, blue: players.AlphaBeta, x, start: bool) -
         if _gamestate.game_ended():
             break
 
-    _gamestate.color = "RED" if start else "BLUE"
-    _gamestate.opponent = "BLUE" if start else "RED"
-    return players.AlphaBeta().evaluate(_gamestate), _gamestate.turn
+    value = evaluate(_gamestate, "RED" if i % 2 else "BLUE")
+    win = 0.5 if value == 0 else 1 if value > 0 else 0
+    return value, _gamestate.turn, win
 
 
 def popen(cmd: str) -> subprocess.Popen:
@@ -117,7 +114,8 @@ def run_server(player: players.AlphaBeta, x: int, i: int) -> tuple:
     a = r[2][r[2].find("<reservation>")+13:][:36]
     b = r[3][r[3].find("<reservation>")+13:][:36]
 
-    p = popen("java -jar " + str(int(i % 4 > 1)) + ".jar -r " + (b if i % 2 else a))
+    p = popen("java -jar " + str(int(i % 4 > 1)) +
+              ".jar -r " + (b if i % 2 else a))
 
     s.close()
     try:
@@ -128,9 +126,9 @@ def run_server(player: players.AlphaBeta, x: int, i: int) -> tuple:
     finally:
         p.kill()
 
-    client.gamestate.color = "RED" if i % 2 else "BLUE"
-    client.gamestate.opp = "BLUE" if i % 2 else "RED"
-    return players.AlphaBeta().evaluate(client.gamestate)
+    value = evaluate(client.gamestate, "RED" if i % 2 else "BLUE")
+    win = 0.5 if value == 0 else 1 if value > 0 else 0
+    return value, client.gamestate.turn, win
 
 
 def worker(work: Queue, data: Queue, func, args: tuple):
@@ -140,7 +138,20 @@ def worker(work: Queue, data: Queue, func, args: tuple):
             _data = func(*(args + _work))
             data.put((_data, _work[0]))
         except Exception as e:
-            print(e.with_traceback())
+            print(e)
+
+
+def progressbar(i, count):
+    def printc(c):
+        print(c, end="")
+    printc("[")
+    for _ in range(round(i / count * 100)):
+        printc("=")
+    printc(">")
+    for _ in range(100 - round(i / count * 100)):
+        printc(" ")
+    printc("]")
+    printc("\r")
 
 
 def test(count: int, x, func, args: tuple) -> tuple:
@@ -159,24 +170,28 @@ def test(count: int, x, func, args: tuple) -> tuple:
     i = 0
     xdata = {y: [] for y in x}
     xcount = len(x) * count
+    progressbar(i, xcount)
     while not work.empty() or not data.empty():
-        print("[" + ("=" * round(i / xcount * 100)) + ">" + (" " * (100 - round(i / xcount * 100))) + "]", end="\r")
         _data = data.get()
         xdata[_data[1]].append(_data[0])
-        f = open("data.txt", "w")
-        f.write(str(xdata))
-        f.close()
         i += 1
+        progressbar(i, xcount)
 
     for thread in threads:
         thread.join()
-        i += 1
-        print("[" + ("=" * round(i / xcount * 100)) + ">" + (" " * (100 - round(i / xcount * 100))) + "]", end="\r")
-
-    while not data.empty():
-        _data = data.get()
-        xdata[_data[1]].append(_data[0])
+        if not data.empty():
+            _data = data.get()
+            xdata[_data[1]].append(_data[0])
+            i += 1
+            progressbar(i, xcount)
 
     evals = {y: [z[0] for z in xdata[y]] for y in x}
     turns = {y: [z[1] for z in xdata[y]] for y in x}
-    return [(sum(evals[y]) / len(evals[y]), sum(turns[y]) / len(turns[y]), sum([1 if x > 0 else 0 if x < 0 else 0.5 for x in evals[y]]) / len(evals[y])) for y in x]
+    wins = {y: [z[2] for z in xdata[y]] for y in x}
+    return [
+        (
+            sum(evals[y]) / len(evals[y]),
+            sum(turns[y]) / len(turns[y]),
+            sum(wins[y]) / len(wins[y])
+        ) for y in x
+    ]
