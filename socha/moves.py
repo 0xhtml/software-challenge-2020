@@ -80,7 +80,7 @@ class SkipMove(Move):
         return "<data class=\"skipmove\"/>"
 
     def __str__(self) -> str:
-        return f"SkipMove()"
+        return "SkipMove()"
 
     def hash(self, _fields) -> str:
         return "S"
