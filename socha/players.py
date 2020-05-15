@@ -174,7 +174,7 @@ class AlphaBeta:
                         if this_is_dragable:
                             value += 1
                     elif this_is_bee:
-                        value -= 10
+                        value -= 11
                         if neighbour in gamestate.board.fields:
                             piece = gamestate.board.fields[neighbour][-1]
                             if piece[1] == "BEETLE":
@@ -184,7 +184,7 @@ class AlphaBeta:
                                     value -= 2
 
         if bee_is_not_set:
-            value -= 20
+            value -= 22
 
         return value
 
