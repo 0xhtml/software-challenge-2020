@@ -1,12 +1,14 @@
 import math
 import time
 import csocha
-from . import gamestate, moves
+import copy
+from . import board, gamestate, moves
 
 
 class AlphaBeta:
     transpositions = {}
     max_depth = 5
+    move = None
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Check for timeout
@@ -191,7 +193,19 @@ class AlphaBeta:
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.time_ns()
 
-        move = self.iddfs(gamestate)
+        self.move = self.iddfs(gamestate)
 
         print("t", round((time.time_ns() - self.now) / 1000000000, 2))
-        return move
+        return self.move
+
+    def background(self, _gamestate: gamestate.GameState):
+        cloned_gamestate = gamestate.GameState(
+            _gamestate.color,
+            _gamestate.turn,
+            board.Board(
+                copy.deepcopy(_gamestate.board.fields),
+                _gamestate.board.obstructed.copy()
+            ),
+            _gamestate.undeployed.copy()
+        )
+        self.move.do(cloned_gamestate)

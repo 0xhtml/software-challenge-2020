@@ -1,16 +1,17 @@
 import socket
+import multiprocessing
 from xml.etree import ElementTree
 
 from . import gamestate, moves, players
 
 
 class Client:
+    room = None
+    gamestate = None
+    background_process = None
+    player = players.AlphaBeta()
+
     def __init__(self, host: str, port: int):
-        self.room = None
-        self.gamestate = None
-
-        self.player = players.AlphaBeta()
-
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
         self.send("<protocol>")
@@ -57,7 +58,13 @@ class Client:
                 if tagclass == "memento":
                     self.gamestate = gamestate.parse(tagdata.find("state"))
                 elif tagclass == "sc.framework.plugins.protocol.MoveRequest":
+                    if self.background_process is not None and self.background_process.is_alive():
+                        self.background_process.terminate()
                     self.send_move(self.player.get(self.gamestate))
+                    self.background_process = multiprocessing.Process(
+                        target=self.player.background,
+                        args=(self.gamestate,)
+                    )
                 elif tagclass == "error":
                     print("ERROR", tagdata.get("message"))
                 elif tagclass == "result":
