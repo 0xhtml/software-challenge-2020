@@ -2,6 +2,7 @@ import math
 import time
 import csocha
 import copy
+import multiprocessing
 from . import board, gamestate, moves
 
 
@@ -130,10 +131,6 @@ class AlphaBeta:
             depth += 1
 
         # Log info
-        print(*[
-            "{:3d} {}".format(values.get(m), str(m))
-            for m in possible_moves
-        ], sep="\n")
         print("d", depth, "e", values.get(possible_moves[0]), end=" ")
 
         # Return best move
@@ -195,10 +192,11 @@ class AlphaBeta:
 
         self.move = self.iddfs(gamestate)
 
-        print("t", round((time.time_ns() - self.now) / 1000000000, 2))
+        print("t", round((time.time_ns() - self.now) / 1000000000, 3))
         return self.move
 
-    def background(self, _gamestate: gamestate.GameState):
+    def background(self, _gamestate: gamestate.GameState, barrier: multiprocessing.Barrier):
+        # Clone gamestate
         cloned_gamestate = gamestate.GameState(
             _gamestate.color,
             _gamestate.turn,
@@ -208,4 +206,19 @@ class AlphaBeta:
             ),
             _gamestate.undeployed.copy()
         )
+
+        # Inform main process that the gamestate is cloned
+        barrier.wait()
+
+        # Do move that was send to server
         self.move.do(cloned_gamestate)
+
+        # Set initial vars
+        self.timeout = False
+        self.now = time.time_ns() + 600000000
+        depth = 1
+
+        # Call alphaBeta and increase depth
+        while not self.timeout and depth < 10:
+            self.alpha_beta(cloned_gamestate, depth, -math.inf, math.inf)
+            depth += 1
