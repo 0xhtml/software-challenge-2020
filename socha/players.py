@@ -2,7 +2,7 @@ import math
 import time
 import csocha
 import copy
-import multiprocessing
+from multiprocessing import Barrier
 from . import board, gamestate, moves
 
 
@@ -195,7 +195,7 @@ class AlphaBeta:
         print("t", round((time.time_ns() - self.now) / 1000000000, 3))
         return self.move
 
-    def background(self, _gamestate: gamestate.GameState, barrier: multiprocessing.Barrier):
+    def background(self, _gamestate: gamestate.GameState, barrier: Barrier):
         # Clone gamestate
         cloned_gamestate = gamestate.GameState(
             _gamestate.color,

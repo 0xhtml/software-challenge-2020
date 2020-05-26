@@ -60,12 +60,15 @@ class Client:
                     self.gamestate = gamestate.parse(tagdata.find("state"))
                 elif tagclass == "sc.framework.plugins.protocol.MoveRequest":
                     print("")
-                    if self.background_process is not None and self.background_process.is_alive():
+                    if (
+                        self.background_process is not None and
+                        self.background_process.is_alive()
+                    ):
                         self.background_process.terminate()
                     self.send_move(self.player.get(self.gamestate))
                     self.background_process = multiprocessing.Process(
                         target=self.player.background,
-                        args=(self.gamestate,self.barrier)
+                        args=(self.gamestate, self.barrier)
                     )
                     self.background_process.start()
                     self.barrier.wait()
