@@ -63,15 +63,16 @@ class AlphaBeta:
                 self.history[mhash] = self.history.get(mhash, 0) + (depth ** 2)
                 break
 
-        if a > b:
-            # Insert into transposition table as upper bound
-            self.transpositions[gshash] = (depth, 1, a)
-        elif a > start_a:
-            # Insert into transposition table as lower bound
-            self.transpositions[gshash] = (depth, 2, a)
-        else:
-            # Insert into transposition table as exact
-            self.transpositions[gshash] = (depth, 0, a)
+        if not self.timeout:
+            if a > b:
+                # Insert into transposition table as upper bound
+                self.transpositions[gshash] = (depth, 1, a)
+            elif a > start_a:
+                # Insert into transposition table as lower bound
+                self.transpositions[gshash] = (depth, 2, a)
+            else:
+                # Insert into transposition table as exact
+                self.transpositions[gshash] = (depth, 0, a)
 
         # Return value
         return a
