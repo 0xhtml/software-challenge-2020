@@ -30,7 +30,11 @@ class AlphaBeta:
                 return transposition[2]
 
         # If depth reached or end of game then stop
-        if (depth <= 0 or gs.game_ended()):
+        if gs.game_ended():
+            value = self.evaluate(gs)
+            self.transpositions[gshash] = (100, 0, value)
+            return value
+        if depth <= 0:
             return self.evaluate(gs)
 
         # Save alpha for later use
