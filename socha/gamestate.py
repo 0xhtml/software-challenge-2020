@@ -25,8 +25,8 @@ class GameState:
         if len(nonempty) == 1:
             return True
         neighbours = csocha.neighbours(piece)
-        l = len(nonempty.intersection(neighbours))
-        if l < 2 or l > 5:
+        length = len(nonempty.intersection(neighbours))
+        if length < 2 or length > 5:
             return True
         return self.is_connected(set(nonempty).difference({piece}))
 
