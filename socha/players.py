@@ -1,12 +1,15 @@
 import math
 import time
 import csocha
-from . import gamestate, moves
+import copy
+from multiprocessing import Barrier
+from . import board, gamestate, moves
 
 
 class AlphaBeta:
     transpositions = {}
     max_depth = 5
+    move = None
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Check for timeout
@@ -124,10 +127,6 @@ class AlphaBeta:
             depth += 1
 
         # Log info
-        print(*[
-            "{:3d} {}".format(values.get(m), str(m))
-            for m in possible_moves
-        ], sep="\n")
         print("d", depth, "e", values.get(possible_moves[0]), end=" ")
 
         # Return best move
@@ -187,7 +186,35 @@ class AlphaBeta:
     def get(self, gamestate: gamestate.GameState) -> moves.Move:
         self.now = time.time_ns()
 
-        move = self.iddfs(gamestate)
+        self.move = self.iddfs(gamestate)
 
-        print("t", round((time.time_ns() - self.now) / 1000000000, 2))
-        return move
+        print("t", round((time.time_ns() - self.now) / 1000000000, 3))
+        return self.move
+
+    def background(self, _gamestate: gamestate.GameState, barrier: Barrier):
+        # Clone gamestate
+        cloned_gamestate = gamestate.GameState(
+            _gamestate.color,
+            _gamestate.turn,
+            board.Board(
+                copy.deepcopy(_gamestate.board.fields),
+                _gamestate.board.obstructed.copy()
+            ),
+            _gamestate.undeployed.copy()
+        )
+
+        # Inform main process that the gamestate is cloned
+        barrier.wait()
+
+        # Do move that was send to server
+        self.move.do(cloned_gamestate)
+
+        # Set initial vars
+        self.timeout = False
+        self.now = time.time_ns() + 600000000
+        depth = 1
+
+        # Call alphaBeta and increase depth
+        while not self.timeout and depth < 10:
+            self.alpha_beta(cloned_gamestate, depth, -math.inf, math.inf)
+            depth += 1
