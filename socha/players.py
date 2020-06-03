@@ -22,24 +22,19 @@ class AlphaBeta:
             # Get transposition
             transposition = self.transpositions[gshash]
 
-            # Check transposition depth
-            if transposition[0] >= depth:
-                if transposition[1] == 0:
-                    # Exact
-                    return transposition[2]
-                if transposition[1] == 1:
-                    # Upper bound
-                    b = min(transposition[2], b)
-                if transposition[1] == 2:
-                    # Lower bound
-                    a = max(transposition[2], a)
-
-                # Cut off
-                if a > b:
-                    return a
+            # Check transposition
+            if transposition[0] >= depth and (
+                (transposition[2] >= b and transposition[1] != 2) or
+                (transposition[2] < b and transposition[1] != 1)
+            ):
+                return transposition[2]
 
         # If depth reached or end of game then stop
-        if (depth <= 0 or gs.game_ended()):
+        if gs.game_ended():
+            value = self.evaluate(gs)
+            self.transpositions[gshash] = (100, 0, value)
+            return value
+        if depth <= 0:
             return self.evaluate(gs)
 
         # Save alpha for later use
@@ -72,15 +67,16 @@ class AlphaBeta:
                 self.history[mhash] = self.history.get(mhash, 0) + (depth ** 2)
                 break
 
-        if a <= start_a:
-            # Insert into transposition table as upper bound
-            self.transpositions[gshash] = (depth, 1, a)
-        elif a > b:
-            # Insert into transposition table as lower bound
-            self.transpositions[gshash] = (depth, 2, a)
-        else:
-            # Insert into transposition table as exact
-            self.transpositions[gshash] = (depth, 0, a)
+        if not self.timeout:
+            if a > b:
+                # Insert into transposition table as upper bound
+                self.transpositions[gshash] = (depth, 1, a)
+            elif a > start_a:
+                # Insert into transposition table as lower bound
+                self.transpositions[gshash] = (depth, 2, a)
+            else:
+                # Insert into transposition table as exact
+                self.transpositions[gshash] = (depth, 0, a)
 
         # Return value
         return a
