@@ -1,38 +1,44 @@
 import math
 import time
 import csocha
-from . import gamestate, moves, transpositions
+from . import gamestate, moves
 
 
 class AlphaBeta:
-    transpositions = transpositions.Transpositions()
+    transpositions = {}
     max_depth = 5
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Check for timeout
         if (time.time_ns() - self.now > 1900000000):
             self.timeout = True
-            return 0, 0
+            return 0
 
         # Generate gamestate hash
         gshash = gs.hash(depth)
 
         # Check for transposition
-        transposition = self.transpositions.get(gshash, depth, gs.turn, a, b)
-        if transposition is not None:
-            return transposition
+        if gshash in self.transpositions:
+            # Get transposition
+            transposition = self.transpositions[gshash]
+
+            # Check transposition
+            if transposition[0] >= depth and (
+                (transposition[2] >= b and transposition[1] != 2) or
+                (transposition[2] < b and transposition[1] != 1)
+            ):
+                return transposition[2]
 
         # If depth reached or end of game then stop
         if gs.game_ended():
             value = self.evaluate(gs)
-            self.transpositions.set(gshash, 100, gs.turn, value, gs.turn, 0)
-            return value, gs.turn
+            self.transpositions[gshash] = (100, 0, value)
+            return value
         if depth <= 0:
-            return self.evaluate(gs), gs.turn
+            return self.evaluate(gs)
 
         # Save alpha for later use
         start_a = a
-        a_turn = 0
 
         # Get possible moves sorted based on history
         possible_moves = sorted(
@@ -46,8 +52,7 @@ class AlphaBeta:
             # Do move
             move.do(gs)
 
-            value, value_turn = self.alpha_beta(gs, depth - 1, -b, -a)
-            value *= -1
+            value = -self.alpha_beta(gs, depth - 1, -b, -a)
 
             # Undo move
             move.undo(gs)
@@ -55,7 +60,6 @@ class AlphaBeta:
             # New best alpha
             if value > a:
                 a = value
-                a_turn = value_turn
 
             # Beta-cutoff
             if value >= b:
@@ -66,17 +70,16 @@ class AlphaBeta:
         if not self.timeout:
             if a > b:
                 # Insert into transposition table as upper bound
-                ttype = 1
+                self.transpositions[gshash] = (depth, 1, a)
             elif a > start_a:
                 # Insert into transposition table as lower bound
-                ttype = 2
+                self.transpositions[gshash] = (depth, 2, a)
             else:
                 # Insert into transposition table as exact
-                ttype = 0
-            self.transpositions.set(gshash, depth, gs.turn, a, a_turn, ttype)
+                self.transpositions[gshash] = (depth, 0, a)
 
         # Return value
-        return a, a_turn
+        return a
 
     def iddfs(self, gamestate: gamestate.GameState):
         # Reset timeout and history
@@ -98,7 +101,7 @@ class AlphaBeta:
                 move.do(gamestate)
 
                 # Perform AlphaBeta
-                value = -(self.alpha_beta(gamestate, depth, -math.inf, math.inf)[0])
+                value = -self.alpha_beta(gamestate, depth, -math.inf, math.inf)
 
                 # Undo move
                 move.undo(gamestate)
@@ -133,7 +136,7 @@ class AlphaBeta:
     def evaluate(self, gamestate: gamestate.GameState):
         val = self.evaluate_single(gamestate, gamestate.color)
         val -= self.evaluate_single(gamestate, gamestate.opponent)
-        return val * (62 - gamestate.turn)
+        return val
 
     def evaluate_single(self, gamestate: gamestate.GameState, color: str):
         empty = gamestate.board.empty()
