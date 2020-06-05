@@ -7,9 +7,10 @@ from . import board, gamestate, moves
 
 
 class AlphaBeta:
-    transpositions = {}
-    max_depth = 5
-    move = None
+    def __init__(self):
+        self.transpositions = {}
+        self.max_depth = 5
+        self.move = None
 
     def alpha_beta(self, gs: gamestate.GameState, depth: int, a: int, b: int):
         # Check for timeout

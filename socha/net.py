@@ -6,14 +6,15 @@ from . import gamestate, moves, players
 
 
 class Client:
-    room = None
-    gamestate = None
-    background_process = None
-    player = players.AlphaBeta()
-    barrier = multiprocessing.Barrier(2)
-    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
     def __init__(self, host: str, port: int):
+        self.room = None
+        self.gamestate = None
+        self.background_process = None
+
+        self.player = players.AlphaBeta()
+        self.barrier = multiprocessing.Barrier(2)
+
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
         self.send("<protocol>")
 
