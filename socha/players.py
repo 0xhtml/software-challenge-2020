@@ -153,8 +153,8 @@ class AlphaBeta:
 
             this_is_bee = bee_is_not_set and pieces[0] == bee
             if this_is_bee:
-                if pieces[-1][1] == "BEETLE" and pieces[-1][0] != color:
-                    value -= 4
+                for i, piece in enumerate(pieces[1:]):
+                    value += (2 if piece[0] == color else -2) * (i + 1)
                 bee_is_not_set = False
 
             this_is_dragable = (
