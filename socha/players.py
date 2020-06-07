@@ -39,7 +39,7 @@ class AlphaBeta:
             self.transpositions[gshash] = (100, 0, value)
             return value
         if depth <= 0:
-            return self.evaluate(gs)
+            return self.quiesce(gs)
 
         # Save alpha for later use
         start_a = a
@@ -132,6 +132,47 @@ class AlphaBeta:
 
         # Return best move
         return possible_moves[0]
+
+    def quiesce(self, gamestate: gamestate.GameState) -> int:
+        # Initialize best with evaluation of current gamestate
+        best = self.evaluate(gamestate)
+
+        if (gamestate.color, "BEE") in gamestate.undeployed:
+            return best
+
+        # Go through all set pieces
+        for position in gamestate.board.color(gamestate.color):
+            length = len(gamestate.board.fields[position])
+            if (
+                length == 1 and
+                (
+                    gamestate.board.fields[position][-1][1] != "BEETLE" or
+                    not gamestate.can_be_disconnected(position)
+                )
+            ):
+                continue
+
+            for dest in gamestate.get_beetle_move_dests(position):
+                if len(gamestate.board.fields[dest]) == length - 1:
+                    continue
+
+                move = moves.DragMove(position, dest)
+
+                # Do move
+                move.do(gamestate)
+
+                # Evaluate
+                value = -self.evaluate(gamestate)
+
+                # Undo move
+                move.undo(gamestate)
+
+                # Set new best value
+                if value > best:
+                    best = value
+
+        # Return best value
+        return best
 
     def evaluate(self, gamestate: gamestate.GameState):
         val = self.evaluate_single(gamestate, gamestate.color)
